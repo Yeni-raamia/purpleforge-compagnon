@@ -1,0 +1,166 @@
+/* =========================================================
+   Charte graphique PurpleForge Compagnon (brief, section 8).
+   Style plat, épuré, sans ombres ni dégradés.
+   ========================================================= */
+
+/* Les couleurs sont déclarées une fois ici, puis réutilisées partout. */
+:root {
+  --violet: #6A1B9A;          /* violet principal (accent, en-têtes) */
+  --violet-fonce: #4A148C;    /* accents secondaires */
+
+  --texte: #2C2C2A;           /* texte principal */
+  --texte-secondaire: #5A5A5A;
+  --bordure: #CCCCCC;
+  --fond: #FAFAFA;            /* fond de page très clair */
+  --blanc: #FFFFFF;
+
+  /* Couleurs de rôle : rose = red team, bleu = blue team. */
+  --red-fond: #FBEAF0;
+  --red-texte: #72243E;
+  --blue-fond: #E6F1FB;
+  --blue-texte: #0C447C;
+
+  --rayon: 8px;               /* coins arrondis des éléments */
+  --rayon-carte: 12px;        /* coins arrondis des cartes */
+}
+
+/* Remise à zéro douce et police de base. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--texte);
+  background-color: var(--fond);
+  line-height: 1.6;
+}
+
+/* ------------------- En-tête ------------------- */
+.app-header {
+  background-color: var(--violet);
+  color: var(--blanc);
+}
+
+.app-header__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.app-logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.app-logo__accent {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.app-nav a {
+  color: var(--blanc);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.app-nav a:hover {
+  text-decoration: underline;
+}
+
+/* ------------------- Contenu principal ------------------- */
+.app-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.hero__title {
+  color: var(--violet-fonce);
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero__subtitle {
+  color: var(--texte-secondaire);
+  font-size: 1.1rem;
+  max-width: 60ch;
+}
+
+/* Petites étiquettes de rôle (rose / bleu). */
+.role {
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--rayon);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.role--red {
+  background-color: var(--red-fond);
+  color: var(--red-texte);
+}
+
+.role--blue {
+  background-color: var(--blue-fond);
+  color: var(--blue-texte);
+}
+
+/* ------------------- Carte ------------------- */
+.card {
+  background-color: var(--blanc);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-carte);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.card__title {
+  color: var(--violet);
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.value-loop {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.value-loop li {
+  margin-bottom: 0.5rem;
+}
+
+/* Badge discret indiquant la phase en cours. */
+.phase-badge {
+  display: inline-block;
+  background-color: #EDE3F4;
+  color: var(--violet-fonce);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--rayon);
+  font-size: 0.9rem;
+}
+
+/* ------------------- Pied de page ------------------- */
+.app-footer {
+  max-width: 960px;
+  margin: 2rem auto 0;
+  padding: 1.5rem;
+  border-top: 1px solid var(--bordure);
+  color: var(--texte-secondaire);
+  font-size: 0.9rem;
+}
+
+/* ------------------- Responsive (petits écrans) ------------------- */
+@media (max-width: 600px) {
+  .hero__title {
+    font-size: 1.5rem;
+  }
+  .app-main {
+    padding: 1.5rem 1rem;
+  }
+}

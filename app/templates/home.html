@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1 class="hero__title">Bienvenue sur PurpleForge Compagnon</h1>
+  <p class="hero__subtitle">
+    L'outil qui relie la <span class="role role--red">red team</span>
+    et la <span class="role role--blue">blue team</span> :
+    d'une technique d'attaque jouée jusqu'à sa détection.
+  </p>
+
+  <div class="card">
+    <h2 class="card__title">La boucle de valeur</h2>
+    <ol class="value-loop">
+      <li>Une technique <strong>ATT&amp;CK</strong> est jouée par la red team.</li>
+      <li>PurpleForge suggère une <strong>détection Sigma</strong> et les logs nécessaires.</li>
+      <li>La blue team la teste, la déploie, met à jour le <strong>statut</strong>.</li>
+      <li>La <strong>carte de couverture</strong> se met à jour, partagée par tous.</li>
+    </ol>
+  </div>
+
+  <p class="phase-badge">Phase 0 — Fondations en place. La suite arrive bientôt.</p>
+</section>
+{% endblock %}

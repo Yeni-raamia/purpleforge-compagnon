@@ -1,0 +1,21 @@
+# Environnement virtuel Python
+.venv/
+
+# Fichiers compilés Python
+__pycache__/
+*.pyc
+
+# Base de données SQLite locale
+*.db
+*.sqlite3
+
+# Cache local des données ATT&CK / Sigma (mais on garde le dossier vide dans git)
+data/*
+!data/.gitkeep
+
+# Configuration et secrets
+.env
+
+# Fichiers système
+.DS_Store
+Thumbs.db

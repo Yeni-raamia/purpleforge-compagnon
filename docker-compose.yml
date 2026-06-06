@@ -1,0 +1,8 @@
+services:
+  purpleforge:
+    build: .
+    ports:
+      - "8000:8000"       # port local:port conteneur
+    volumes:
+      - ./purpleforge.db:/app/purpleforge.db   # la base SQLite persiste en dehors du conteneur
+    restart: unless-stopped
