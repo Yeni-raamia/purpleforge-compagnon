@@ -1,0 +1,53 @@
+<!-- Fragment HTMX : dropdown de recherche rapide dans la nav.
+     Injecté dans #search-dropdown au fil de la frappe. -->
+
+{% if results.total == 0 and results.query | length >= 2 %}
+<div class="srch-empty">
+  Aucun résultat pour <strong>« {{ results.query }} »</strong>
+</div>
+
+{% elif results.campaign_hits %}
+{% for hit in results.campaign_hits[:4] %}
+<div class="srch-group">
+
+  <!-- Campagne -->
+  <a href="/campaigns/{{ hit.campaign.id }}" class="srch-campaign-row">
+    <span class="srch-campaign-row__icon">🗂</span>
+    <span class="srch-campaign-row__name">{{ hit.campaign.name }}</span>
+    {% if hit.campaign_match %}
+    <span class="srch-badge srch-badge--campaign">campagne</span>
+    {% endif %}
+    {% if hit.campaign.tags %}
+    {% for tag in hit.campaign.tags.split(',') %}{% set t=tag.strip() %}{% if t %}
+    <span class="srch-badge srch-badge--tag">{{ t }}</span>
+    {% endif %}{% endfor %}
+    {% endif %}
+  </a>
+
+  <!-- Techniques de cette campagne (max 3) -->
+  {% for t in hit.techniques[:3] %}
+  <a href="/campaigns/{{ hit.campaign.id }}#tech-{{ t.id }}" class="srch-tech-row">
+    <span class="srch-tech-row__id">{{ t.attack_id }}</span>
+    <span class="srch-tech-row__name">{{ t.name }}</span>
+    {% if t.status.value == 'detecte' %}
+    <span class="srch-status srch-status--d">✓</span>
+    {% elif t.status.value == 'a_construire' %}
+    <span class="srch-status srch-status--c">⚠</span>
+    {% else %}
+    <span class="srch-status srch-status--n">✗</span>
+    {% endif %}
+  </a>
+  {% endfor %}
+
+  {% if hit.techniques | length > 3 %}
+  <span class="srch-more">+{{ hit.techniques | length - 3 }} technique(s)…</span>
+  {% endif %}
+
+</div>
+{% endfor %}
+
+<!-- Lien vers la page complète -->
+<a href="/search?q={{ results.query | urlencode }}" class="srch-see-all">
+  Voir tous les résultats ({{ results.total }}) →
+</a>
+{% endif %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Recherche « {{ q }} » — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">
+        <span class="page-title__icon">🔍</span>
+        Recherche
+      </h1>
+      {% if results.total > 0 %}
+      <p class="page-subtitle">
+        {{ results.total }} résultat{% if results.total > 1 %}s{% endif %}
+        pour <strong>« {{ q }} »</strong>
+      </p>
+      {% elif q %}
+      <p class="page-subtitle">Aucun résultat pour <strong>« {{ q }} »</strong></p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ─── Barre de recherche pleine largeur ────────────────────────────── -->
+  <form method="get" action="/search" class="search-page-bar">
+    <input
+      class="search-page-bar__input"
+      type="search"
+      name="q"
+      value="{{ q }}"
+      placeholder="ATT&CK ID, technique, note, campagne, tag APT…"
+      autofocus
+    >
+    <button type="submit" class="search-page-bar__btn">Rechercher</button>
+  </form>
+
+  <!-- ─── Résultats ────────────────────────────────────────────────────── -->
+  {% if results.campaign_hits %}
+
+  <div class="search-results">
+    {% for hit in results.campaign_hits %}
+    <div class="srch-result-block">
+
+      <!-- En-tête de la campagne -->
+      <div class="srch-result-block__header">
+        <a href="/campaigns/{{ hit.campaign.id }}" class="srch-result-campaign">
+          <span class="srch-result-campaign__icon">🗂</span>
+          <span class="srch-result-campaign__name">{{ hit.campaign.name }}</span>
+        </a>
+        {% if hit.campaign.tags %}
+        <div class="apt-tags" style="display:inline-flex; margin-left:.75rem;">
+          {% for tag in hit.campaign.tags.split(',') %}{% set t=tag.strip() %}{% if t %}
+          <span class="apt-tag apt-tag--sm">{{ t }}</span>
+          {% endif %}{% endfor %}
+        </div>
+        {% endif %}
+        <a href="/campaigns/{{ hit.campaign.id }}/coverage" class="srch-result-campaign__link">
+          Voir couverture →
+        </a>
+      </div>
+
+      <!-- Techniques qui matchent -->
+      {% if hit.techniques %}
+      <div class="srch-tech-table">
+        {% for t in hit.techniques %}
+        <a href="/campaigns/{{ hit.campaign.id }}#tech-{{ t.id }}" class="srch-tech-row srch-tech-row--full">
+
+          <span class="srch-tech-row__id">{{ t.attack_id }}</span>
+
+          <span class="srch-tech-row__name">{{ t.name }}</span>
+
+          <span class="srch-tech-row__tactic">{{ t.tactic | replace('-', ' ') }}</span>
+
+          {% if t.status.value == 'detecte' %}
+          <span class="srch-status srch-status--d">✓ Détectée</span>
+          {% elif t.status.value == 'a_construire' %}
+          <span class="srch-status srch-status--c">⚠ À construire</span>
+          {% else %}
+          <span class="srch-status srch-status--n">✗ Non détectée</span>
+          {% endif %}
+
+          <!-- Extrait de la note si elle correspond -->
+          {% if t.blue_note and q.lower() in t.blue_note.lower() %}
+          <span class="srch-tech-row__note">
+            📝 {{ highlight(t.blue_note, q) }}
+          </span>
+          {% endif %}
+
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Campagne correspond mais pas de technique pour ce mot -->
+      {% if hit.campaign_match and not hit.techniques %}
+      <p class="srch-campaign-only">
+        Le nom, la description ou les tags de cette campagne correspondent.
+      </p>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% elif q and q | length >= 2 %}
+  <div class="empty-state" style="padding:3rem; text-align:center;">
+    <p style="font-size:2rem; margin-bottom:.5rem;">🔍</p>
+    <p style="color:var(--gris); margin-bottom:1.25rem;">
+      Aucune technique, campagne ou note ne correspond à <strong>« {{ q }} »</strong>.
+    </p>
+    <p style="font-size:.85rem; color:var(--gris);">
+      Essaie un ATT&CK ID (ex&nbsp;: <code>T1059</code>),
+      un nom de technique ou un groupe (ex&nbsp;: <code>APT28</code>).
+    </p>
+  </div>
+
+  {% elif not q %}
+  <div class="search-hints">
+    <h2 class="search-hints__title">Exemples de recherches</h2>
+    <div class="search-hints__grid">
+      <a href="/search?q=T1059" class="search-hint-chip">T1059</a>
+      <a href="/search?q=credential" class="search-hint-chip">credential</a>
+      <a href="/search?q=mimikatz" class="search-hint-chip">mimikatz</a>
+      <a href="/search?q=APT28" class="search-hint-chip">APT28</a>
+      <a href="/search?q=powershell" class="search-hint-chip">powershell</a>
+      <a href="/search?q=lateral" class="search-hint-chip">lateral</a>
+      <a href="/search?q=detecte" class="search-hint-chip">détecté</a>
+      <a href="/search?q=wazuh" class="search-hint-chip">wazuh</a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

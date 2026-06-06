@@ -17,10 +17,12 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.database import create_db_and_tables, engine
 import app.models  # noqa: F401 — importe User + Campaign + Technique pour create_all
 from app.dependencies import NotAuthenticated, NotAdmin
-from app.routes import auth     as auth_router
-from app.routes import admin    as admin_router
-from app.routes import campaigns as campaigns_router
+from app.routes import auth       as auth_router
+from app.routes import admin      as admin_router
+from app.routes import campaigns  as campaigns_router
 from app.routes import techniques as techniques_router
+from app.routes import dashboard  as dashboard_router
+from app.routes import search     as search_router
 
 # ── Chemins ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent
@@ -75,6 +77,8 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 # ── Enregistrement des routers ────────────────────────────────────────────────
 app.include_router(auth_router.router)
 app.include_router(admin_router.router)
+app.include_router(search_router.router)
+app.include_router(dashboard_router.router)
 app.include_router(campaigns_router.router)
 app.include_router(techniques_router.router)
 

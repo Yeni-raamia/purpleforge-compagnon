@@ -27,6 +27,30 @@
       renderAllMarkdown();
     });
 
+    // ── Dropdown de recherche : fermeture au clic extérieur / Escape ─────
+    document.addEventListener('click', function(e) {
+      const search = document.getElementById('app-search');
+      const dropdown = document.getElementById('search-dropdown');
+      if (search && dropdown && !search.contains(e.target)) {
+        dropdown.innerHTML = '';
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const dropdown = document.getElementById('search-dropdown');
+        const input = document.getElementById('nav-search-input');
+        if (dropdown) dropdown.innerHTML = '';
+        if (input) input.blur();
+      }
+      // Raccourci "/" pour focus sur la barre de recherche
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT'
+          && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        const input = document.getElementById('nav-search-input');
+        if (input) input.focus();
+      }
+    });
+
     function renderAllMarkdown() {
       document.querySelectorAll('.md-rendered[data-md]').forEach(function (el) {
         if (!el.dataset.rendered) {
@@ -82,6 +106,31 @@
         <a href="/campaigns/" class="app-nav__link app-nav__link--cta">
           Campagnes
         </a>
+
+        <!-- Barre de recherche (visible seulement si connecté) -->
+        {% if current_user is defined and current_user %}
+        <div class="app-search" id="app-search">
+          <form action="/search" method="get" class="app-search__form" autocomplete="off">
+            <span class="app-search__icon">🔍</span>
+            <input
+              class="app-search__input"
+              type="search"
+              name="q"
+              id="nav-search-input"
+              placeholder="Rechercher…"
+              aria-label="Recherche globale"
+              hx-get="/search/quick"
+              hx-trigger="keyup changed delay:300ms, search"
+              hx-target="#search-dropdown"
+              hx-include="[name='q']"
+              hx-swap="innerHTML"
+              autocomplete="off"
+            >
+          </form>
+          <!-- Dropdown des résultats rapides -->
+          <div class="search-dropdown" id="search-dropdown" role="listbox"></div>
+        </div>
+        {% endif %}
 
         <!-- Zone utilisateur connecté (affichée seulement si current_user est défini) -->
         {% if current_user is defined and current_user %}
