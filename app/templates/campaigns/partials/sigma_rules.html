@@ -43,7 +43,7 @@
     <a
       href="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}/wazuh?rule_idx={{ loop.index0 }}"
       class="btn-wazuh"
-      download
+      download="wazuh_{{ technique.attack_id | replace('.', '_') }}_{{ loop.index0 }}.xml"
       title="Télécharger la règle convertie au format Wazuh XML"
     >
       <span class="btn-wazuh__icon">🛡️</span>

@@ -44,7 +44,7 @@ def get_sigma_rules(
     return templates.TemplateResponse(
         request,
         "campaigns/partials/sigma_rules.html",
-        {"technique": technique, "rules": rules},
+        {"technique": technique, "rules": rules, "campaign_id": campaign_id},
     )
 
 
