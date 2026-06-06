@@ -88,8 +88,8 @@
   <header class="app-header">
     <div class="app-header__inner">
 
-      <!-- Logo avec mascotte -->
-      <a href="/" class="app-logo">
+      <!-- Logo avec mascotte — lien vers dashboard si connecté, accueil sinon -->
+      <a href="{% if current_user is defined and current_user %}/dashboard{% else %}/{% endif %}" class="app-logo">
         <span class="app-logo__mascot" aria-hidden="true"></span>
         <span class="app-logo__text">
           Purple<span class="app-logo__accent">Forge</span>
@@ -99,13 +99,15 @@
 
       <!-- Navigation principale -->
       <nav class="app-nav" aria-label="Navigation principale">
+
+        <!-- Liens gauche -->
         <a href="/" class="app-nav__link">Accueil</a>
-        {% if current_user is defined and current_user %}
-        <a href="/dashboard" class="app-nav__link">Dashboard</a>
-        {% endif %}
         <a href="/campaigns/" class="app-nav__link app-nav__link--cta">
           Campagnes
         </a>
+        {% if current_user is defined and current_user %}
+        <a href="/dashboard" class="app-nav__link">Dashboard</a>
+        {% endif %}
 
         <!-- Barre de recherche (visible seulement si connecté) -->
         {% if current_user is defined and current_user %}
@@ -132,7 +134,7 @@
         </div>
         {% endif %}
 
-        <!-- Zone utilisateur connecté (affichée seulement si current_user est défini) -->
+        <!-- Zone utilisateur (droite) — avatar + compte + admin + logout -->
         {% if current_user is defined and current_user %}
         <div class="app-nav__user">
           <span class="app-nav__avatar" aria-hidden="true">

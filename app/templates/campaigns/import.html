@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Importer une campagne — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/campaigns/" class="btn-back">← Toutes les campagnes</a>
+      <h1 class="page-title">Importer une campagne</h1>
+      <p class="page-subtitle">
+        Crée une nouvelle campagne depuis un fichier JSON exporté par PurpleForge.
+      </p>
+    </div>
+  </div>
+
+  <!-- ─── Erreur éventuelle ─────────────────────────────────────────────── -->
+  {% if error %}
+  <div class="import-error">
+    <span class="import-error__icon">⚠</span>
+    <span>{{ error }}</span>
+  </div>
+  {% endif %}
+
+  <div class="import-layout">
+
+    <!-- ─── Zone principale : formulaire d'upload ──────────────────────── -->
+    <div class="import-card">
+      <form method="post" action="/campaigns/import"
+            enctype="multipart/form-data" id="import-form">
+
+        <!-- Zone de dépôt -->
+        <div class="import-drop" id="import-drop"
+             onclick="document.getElementById('file-input').click()"
+             role="button" tabindex="0"
+             aria-label="Zone de dépôt de fichier JSON">
+          <div class="import-drop__icon">📂</div>
+          <p class="import-drop__label">
+            Glisse le fichier ici ou
+            <span class="import-drop__cta">clique pour sélectionner</span>
+          </p>
+          <p class="import-drop__hint">
+            Format accepté&nbsp;: fichier <strong>.json</strong>
+            exporté depuis PurpleForge
+          </p>
+          <div class="import-drop__badge" id="file-badge" style="display:none;"></div>
+        </div>
+
+        <!-- Input caché -->
+        <input type="file" name="file" id="file-input"
+               accept=".json,application/json"
+               style="display:none;" required
+               onchange="onFileSelected(this)">
+
+        <button type="submit" class="btn btn--primary import-submit"
+                id="import-submit" disabled>
+          ⬆ Importer la campagne
+        </button>
+      </form>
+    </div>
+
+    <!-- ─── Sidebar : format attendu ────────────────────────────────────── -->
+    <aside>
+      <div class="import-info">
+        <h3 class="import-info__title">Format attendu</h3>
+        <p style="font-size:.87rem; color:var(--gris); line-height:1.6; margin:0 0 .5rem;">
+          Le fichier doit être un <strong>export JSON PurpleForge</strong>
+          (bouton <em>«&nbsp;⬇&nbsp;JSON PurpleForge&nbsp;»</em> sur la page d'une campagne).
+        </p>
+
+        <div class="import-code">
+<pre>{
+  "purpleforge_version": "1",
+  "campaign": {
+    "name": "Red Team Juin",
+    "description": "...",
+    "tags": "APT28"
+  },
+  "techniques": [
+    {
+      "attack_id": "T1059",
+      "name": "...",
+      "tactic": "execution",
+      "status": "detecte",
+      "blue_note": "..."
+    }
+  ]
+}</pre>
+        </div>
+
+        <div class="import-info__note">
+          <span>💡</span>
+          <span>
+            La campagne sera créée avec le suffixe
+            <em>« (importée) »</em> pour éviter les doublons.
+          </span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const drop   = document.getElementById('import-drop');
+  const input  = document.getElementById('file-input');
+  const badge  = document.getElementById('file-badge');
+  const submit = document.getElementById('import-submit');
+
+  /* ── Drag & drop ──────────────────────────────────────────────────── */
+  drop.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    drop.classList.add('import-drop--over');
+  });
+  drop.addEventListener('dragleave', function () {
+    drop.classList.remove('import-drop--over');
+  });
+  drop.addEventListener('drop', function (e) {
+    e.preventDefault();
+    drop.classList.remove('import-drop--over');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        input.files = dt.files;
+      } catch (_) { /* Firefox < 62 */ }
+      onFileSelected(input);
+    }
+  });
+
+  /* ── Clavier (accessibilité) ──────────────────────────────────────── */
+  drop.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      input.click();
+    }
+  });
+})();
+
+function onFileSelected(el) {
+  if (!el.files || !el.files[0]) return;
+  const f    = el.files[0];
+  const size = f.size < 1024
+    ? f.size + ' o'
+    : Math.round(f.size / 1024 * 10) / 10 + ' Ko';
+
+  const badge  = document.getElementById('file-badge');
+  const submit = document.getElementById('import-submit');
+  const drop   = document.getElementById('import-drop');
+
+  badge.textContent  = '📄 ' + f.name + ' (' + size + ')';
+  badge.style.display = 'block';
+  submit.disabled    = false;
+  drop.classList.add('import-drop--selected');
+}
+</script>
+{% endblock %}

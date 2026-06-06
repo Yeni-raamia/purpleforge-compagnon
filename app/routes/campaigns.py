@@ -5,10 +5,12 @@ L'utilisateur connecté est passé dans le contexte des templates
 pour afficher son nom dans la navigation.
 """
 
+import csv
+import io
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -83,6 +85,95 @@ def create_campaign(
     session.add(campaign)
     session.commit()
     return RedirectResponse(url="/campaigns/", status_code=303)
+
+
+@router.get("/import", response_class=HTMLResponse)
+def import_campaign_page(
+    request: Request,
+    current_user: User = Depends(require_user),
+):
+    """Page d'import : affiche le formulaire de dépôt de fichier JSON."""
+    return templates.TemplateResponse(
+        request,
+        "campaigns/import.html",
+        {"current_user": current_user},
+    )
+
+
+@router.post("/import", response_class=HTMLResponse)
+async def import_campaign_post(
+    request: Request,
+    file: UploadFile = File(...),
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Traite le fichier JSON PurpleForge et crée la campagne importée."""
+    # 1. Lecture et décodage
+    content = await file.read()
+    try:
+        data = json.loads(content.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return templates.TemplateResponse(
+            request,
+            "campaigns/import.html",
+            {"error": f"Fichier JSON invalide : {exc}", "current_user": current_user},
+            status_code=400,
+        )
+
+    # 2. Validation minimale du format
+    if "campaign" not in data or "techniques" not in data:
+        return templates.TemplateResponse(
+            request,
+            "campaigns/import.html",
+            {
+                "error": (
+                    "Format non reconnu. Utilise un fichier exporté "
+                    "depuis PurpleForge (bouton « ⬇ JSON PurpleForge »)."
+                ),
+                "current_user": current_user,
+            },
+            status_code=400,
+        )
+
+    camp_data  = data["campaign"]
+    techs_data = data.get("techniques", [])
+
+    # 3. Création de la campagne
+    raw_name = (camp_data.get("name") or "Campagne importée").strip()
+    campaign = Campaign(
+        name        = f"{raw_name} (importée)",
+        description = (camp_data.get("description") or "").strip(),
+        tags        = _normalize_tags(camp_data.get("tags") or ""),
+    )
+    session.add(campaign)
+    session.commit()
+    session.refresh(campaign)
+
+    # 4. Import des techniques (lignes incomplètes ignorées silencieusement)
+    valid_statuses = {s.value for s in TechniqueStatus}
+    for t in techs_data:
+        attack_id = (t.get("attack_id") or "").strip()
+        name      = (t.get("name")      or "").strip()
+        tactic    = (t.get("tactic")    or "").strip()
+        if not attack_id or not name or not tactic:
+            continue
+
+        status_val = (t.get("status") or "non_detecte").strip()
+        if status_val not in valid_statuses:
+            status_val = "non_detecte"
+
+        session.add(TechniqueEntry(
+            campaign_id = campaign.id,
+            attack_id   = attack_id,
+            name        = name,
+            tactic      = tactic,
+            status      = TechniqueStatus(status_val),
+            blue_note   = (t.get("blue_note") or "").strip() or None,
+        ))
+
+    session.commit()
+
+    return RedirectResponse(url=f"/campaigns/{campaign.id}", status_code=303)
 
 
 @router.get("/{campaign_id}", response_class=HTMLResponse)
@@ -290,6 +381,98 @@ def campaign_export(
     return Response(
         content=json.dumps(layer, ensure_ascii=False, indent=2),
         media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{campaign_id}/export/json")
+def campaign_export_json(
+    campaign_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Exporte la campagne au format JSON natif PurpleForge (réimportable)."""
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return Response(status_code=404)
+
+    techniques = session.exec(
+        select(TechniqueEntry)
+        .where(TechniqueEntry.campaign_id == campaign_id)
+        .order_by(TechniqueEntry.tactic, TechniqueEntry.attack_id)
+    ).all()
+
+    payload = {
+        "purpleforge_version": "1",
+        "exported_at": datetime.utcnow().isoformat() + "Z",
+        "campaign": {
+            "name":        campaign.name,
+            "description": campaign.description or "",
+            "tags":        campaign.tags or "",
+        },
+        "techniques": [
+            {
+                "attack_id": t.attack_id,
+                "name":      t.name,
+                "tactic":    t.tactic,
+                "status":    t.status.value,
+                "blue_note": t.blue_note or "",
+            }
+            for t in techniques
+        ],
+    }
+
+    safe_name = "".join(
+        c if c.isalnum() or c in "-_" else "-"
+        for c in campaign.name.lower()
+    ).strip("-")
+    filename = f"purpleforge-{safe_name}.json"
+
+    return Response(
+        content=json.dumps(payload, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{campaign_id}/export/csv")
+def campaign_export_csv(
+    campaign_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Exporte la campagne au format CSV (compatible tableur)."""
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return Response(status_code=404)
+
+    techniques = session.exec(
+        select(TechniqueEntry)
+        .where(TechniqueEntry.campaign_id == campaign_id)
+        .order_by(TechniqueEntry.tactic, TechniqueEntry.attack_id)
+    ).all()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf, quoting=csv.QUOTE_ALL)
+    writer.writerow(["attack_id", "name", "tactic", "status", "blue_note"])
+    for t in techniques:
+        writer.writerow([
+            t.attack_id,
+            t.name,
+            t.tactic,
+            t.status.value,
+            t.blue_note or "",
+        ])
+
+    safe_name = "".join(
+        c if c.isalnum() or c in "-_" else "-"
+        for c in campaign.name.lower()
+    ).strip("-")
+    filename = f"purpleforge-{safe_name}.csv"
+
+    return Response(
+        content=buf.getvalue().encode("utf-8-sig"),   # BOM pour Excel
+        media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 

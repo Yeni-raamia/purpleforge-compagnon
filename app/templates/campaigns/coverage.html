@@ -1,117 +1,356 @@
 {% extends "base.html" %}
-
 {% block title %}Couverture — {{ campaign.name }} — PurpleForge{% endblock %}
 
 {% block content %}
+<div class="cov2-wrap">
+
+{% if coverage.total == 0 %}
+<!-- ══ ÉTAT VIDE ══════════════════════════════════════════════════════════ -->
 <div class="page-header">
   <a href="/campaigns/{{ campaign.id }}" class="back-link">← {{ campaign.name }}</a>
   <h1 class="page-title">Couverture de détection</h1>
-  <p class="page-subtitle">{{ campaign.name }}</p>
 </div>
-
-{% if coverage.total == 0 %}
-<!-- État vide : aucune technique dans la campagne -->
-<div class="empty-state">
-  <p>Aucune technique enregistrée dans cette campagne.</p>
+<div class="empty-state" style="padding:3rem; text-align:center;">
+  <p style="font-size:2rem; margin-bottom:.5rem;">📊</p>
+  <p style="color:var(--gris); margin-bottom:1.25rem;">
+    Aucune technique enregistrée dans cette campagne.
+  </p>
   <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
     Ouvrir la matrice ATT&CK →
   </a>
 </div>
 
 {% else %}
-<!-- ─── Bloc résumé global ─── -->
-<section class="coverage-summary">
-  <div class="coverage-total">
-    <span class="coverage-total__number">{{ coverage.total }}</span>
-    <span class="coverage-total__label">technique{{ 's' if coverage.total > 1 else '' }}</span>
-  </div>
 
-  <!-- Trois jauges de statut -->
-  <div class="coverage-stats">
+<!-- ══ HERO BAND ══════════════════════════════════════════════════════════ -->
+<div class="cov2-hero">
+  <div class="cov2-hero__orb cov2-hero__orb--1" aria-hidden="true"></div>
+  <div class="cov2-hero__orb cov2-hero__orb--2" aria-hidden="true"></div>
+  <div class="cov2-hero__dots"  aria-hidden="true"></div>
 
-    <div class="coverage-stat coverage-stat--detecte">
-      <span class="coverage-stat__count">{{ coverage.counts.detecte }}</span>
-      <span class="coverage-stat__pct">{{ coverage.percentages.detecte }}&thinsp;%</span>
-      <span class="coverage-stat__label">Détectées</span>
+  <div class="cov2-hero__inner">
+
+    <!-- Texte -->
+    <div class="cov2-hero__left">
+      <a href="/campaigns/{{ campaign.id }}" class="cov2-back">← {{ campaign.name }}</a>
+      <h1 class="cov2-hero__title">Couverture<br>de détection</h1>
+      {% if campaign.tags %}
+      <div class="cov2-hero__tags">
+        {% for tag in campaign.tags.split(',') %}{% set t = tag.strip() %}{% if t %}
+        <span class="db2-apt-chip">{{ t }}</span>
+        {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+      <div class="cov2-hero__actions">
+        <a href="/campaigns/{{ campaign.id }}/export"
+           class="cov2-btn cov2-btn--ghost" download>⬇ Navigator JSON</a>
+        <a href="/campaigns/{{ campaign.id }}/print"
+           class="cov2-btn cov2-btn--ghost">🖨 Rapport PDF</a>
+        <a href="/campaigns/{{ campaign.id }}/matrix"
+           class="cov2-btn cov2-btn--solid">Matrice ATT&CK →</a>
+      </div>
     </div>
 
-    <div class="coverage-stat coverage-stat--a_construire">
-      <span class="coverage-stat__count">{{ coverage.counts.a_construire }}</span>
-      <span class="coverage-stat__pct">{{ coverage.percentages.a_construire }}&thinsp;%</span>
-      <span class="coverage-stat__label">À construire</span>
+    <!-- Ring de détection -->
+    <div class="db2-ring-zone">
+      <div class="db2-ring-wrap">
+        <svg class="db2-ring-svg" viewBox="0 0 160 160"
+             aria-label="Taux de détection : {{ coverage.percentages.detecte }}%">
+          <defs>
+            <linearGradient id="covGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#4ade80"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+            <filter id="covGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Track -->
+          <circle cx="80" cy="80" r="70" fill="none"
+            stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+          <!-- Ticks -->
+          {% for i in range(10) %}
+          <line x1="80" y1="12" x2="80" y2="18"
+            stroke="rgba(255,255,255,0.1)" stroke-width="1.5"
+            transform="rotate({{ i * 36 }} 80 80)"/>
+          {% endfor %}
+          <!-- Arc animé par JS -->
+          <circle cx="80" cy="80" r="70" fill="none"
+            stroke="url(#covGrad)"
+            stroke-width="10"
+            stroke-linecap="round"
+            stroke-dasharray="439.82"
+            stroke-dashoffset="439.82"
+            transform="rotate(-90 80 80)"
+            filter="url(#covGlow)"
+            id="cov-ring"
+            data-pct="{{ coverage.percentages.detecte }}"/>
+        </svg>
+        <div class="db2-ring__center">
+          <span class="db2-ring__pct" id="cov-pct">0</span>
+          <span class="db2-ring__unit">%</span>
+          <span class="db2-ring__label">détecté</span>
+        </div>
+      </div>
+      <p class="db2-ring-caption">{{ coverage.total }} technique{{ 's' if coverage.total > 1 }}</p>
     </div>
 
-    <div class="coverage-stat coverage-stat--non_detecte">
-      <span class="coverage-stat__count">{{ coverage.counts.non_detecte }}</span>
-      <span class="coverage-stat__pct">{{ coverage.percentages.non_detecte }}&thinsp;%</span>
-      <span class="coverage-stat__label">Non détectées</span>
+    <!-- 3 KPI -->
+    <div class="cov2-kpis">
+      <div class="cov2-kpi cov2-kpi--d">
+        <span class="cov2-kpi__val">{{ coverage.counts.detecte }}</span>
+        <span class="cov2-kpi__pct">{{ coverage.percentages.detecte }}&thinsp;%</span>
+        <span class="cov2-kpi__lbl">Détectées</span>
+      </div>
+      <div class="cov2-kpi cov2-kpi--c">
+        <span class="cov2-kpi__val">{{ coverage.counts.a_construire }}</span>
+        <span class="cov2-kpi__pct">{{ coverage.percentages.a_construire }}&thinsp;%</span>
+        <span class="cov2-kpi__lbl">À construire</span>
+      </div>
+      <div class="cov2-kpi cov2-kpi--n">
+        <span class="cov2-kpi__val">{{ coverage.counts.non_detecte }}</span>
+        <span class="cov2-kpi__pct">{{ coverage.percentages.non_detecte }}&thinsp;%</span>
+        <span class="cov2-kpi__lbl">Non détectées</span>
+      </div>
     </div>
 
-  </div>
+  </div><!-- /.cov2-hero__inner -->
+</div><!-- /.cov2-hero -->
 
-  <!-- Barre de progression empilée -->
-  <div class="coverage-bar" title="{{ coverage.percentages.detecte }}% détectées">
-    {% if coverage.percentages.detecte > 0 %}
-    <div class="coverage-bar__segment coverage-bar__segment--detecte"
-         style="width: {{ coverage.percentages.detecte }}%"
-         title="Détectées : {{ coverage.counts.detecte }}"></div>
-    {% endif %}
-    {% if coverage.percentages.a_construire > 0 %}
-    <div class="coverage-bar__segment coverage-bar__segment--a_construire"
-         style="width: {{ coverage.percentages.a_construire }}%"
-         title="À construire : {{ coverage.counts.a_construire }}"></div>
-    {% endif %}
-    {% if coverage.percentages.non_detecte > 0 %}
-    <div class="coverage-bar__segment coverage-bar__segment--non_detecte"
-         style="width: {{ coverage.percentages.non_detecte }}%"
-         title="Non détectées : {{ coverage.counts.non_detecte }}"></div>
-    {% endif %}
+<!-- ══ BARRE DE STATUT ═══════════════════════════════════════════════════ -->
+{% set pct_d = coverage.percentages.detecte %}
+{% set pct_c = coverage.percentages.a_construire %}
+{% set pct_n = coverage.percentages.non_detecte %}
+<div class="db2-status-bar">
+  {% if pct_d > 0 %}
+  <div class="db2-seg db2-seg--d" style="flex:{{ pct_d }}">
+    <span class="db2-seg__label">✓ Détecté · {{ pct_d }}%</span>
   </div>
-
-  <!-- Légende de la barre -->
-  <div class="coverage-legend">
-    <span class="coverage-legend__item coverage-legend__item--detecte">Détectées</span>
-    <span class="coverage-legend__item coverage-legend__item--a_construire">À construire</span>
-    <span class="coverage-legend__item coverage-legend__item--non_detecte">Non détectées</span>
+  {% endif %}
+  {% if pct_c > 0 %}
+  <div class="db2-seg db2-seg--c" style="flex:{{ pct_c }}">
+    <span class="db2-seg__label">⚙ À construire · {{ pct_c }}%</span>
   </div>
-</section>
-
-<!-- ─── Bouton export Navigator ─── -->
-<div class="coverage-actions">
-  <a href="/campaigns/{{ campaign.id }}/export"
-     class="btn btn--secondary"
-     download>
-    ⬇ Exporter ATT&CK Navigator (.json)
-  </a>
-  <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
-    Ouvrir la matrice →
-  </a>
+  {% endif %}
+  {% if pct_n > 0 %}
+  <div class="db2-seg db2-seg--n" style="flex:{{ pct_n }}">
+    <span class="db2-seg__label">✗ Non détecté · {{ pct_n }}%</span>
+  </div>
+  {% endif %}
 </div>
 
-<!-- ─── Détail par tactique ─── -->
-<section class="coverage-tactics">
-  <h2 class="section-title">Détail par tactique</h2>
+<!-- ══ BARRE DE FILTRE (sticky) ══════════════════════════════════════════ -->
+<div class="cov2-toolbar" id="cov-toolbar">
+  <div class="cov2-filters" role="group" aria-label="Filtrer par statut">
+    <button class="cov2-filter-btn cov2-filter-btn--active" data-filter="all">
+      Toutes
+      <span class="cov2-filter-badge">{{ coverage.total }}</span>
+    </button>
+    <button class="cov2-filter-btn cov2-filter-btn--d" data-filter="detecte">
+      ✓ Détectées
+      <span class="cov2-filter-badge">{{ coverage.counts.detecte }}</span>
+    </button>
+    <button class="cov2-filter-btn cov2-filter-btn--c" data-filter="a_construire">
+      ⚙ À construire
+      <span class="cov2-filter-badge">{{ coverage.counts.a_construire }}</span>
+    </button>
+    <button class="cov2-filter-btn cov2-filter-btn--n" data-filter="non_detecte">
+      ✗ Non détectées
+      <span class="cov2-filter-badge">{{ coverage.counts.non_detecte }}</span>
+    </button>
+  </div>
+  <span class="cov2-filter-hint" id="cov-filter-hint"></span>
+</div>
+
+<!-- ══ HEATMAP PAR TACTIQUE ══════════════════════════════════════════════ -->
+<div class="cov2-heatmap" id="cov-heatmap">
 
   {% for tactic in coverage.by_tactic %}
-  <div class="coverage-tactic">
-    <div class="coverage-tactic__header">
-      <h3 class="coverage-tactic__name">{{ tactic.name }}</h3>
-      <span class="coverage-tactic__count">{{ tactic.techniques | length }} technique{{ 's' if tactic.techniques | length > 1 else '' }}</span>
+
+  {# Calcul stats par tactique #}
+  {% set ns = namespace(nd=0, nc=0, nn=0) %}
+  {% for t in tactic.techniques %}
+    {% if t.status.value == 'detecte' %}{% set ns.nd = ns.nd + 1 %}
+    {% elif t.status.value == 'a_construire' %}{% set ns.nc = ns.nc + 1 %}
+    {% else %}{% set ns.nn = ns.nn + 1 %}{% endif %}
+  {% endfor %}
+  {% set tac_total = tactic.techniques | length %}
+  {% set tac_pct   = (ns.nd / tac_total * 100) | round | int if tac_total > 0 else 0 %}
+  {% set tac_pd    = (ns.nd / tac_total * 100) | round | int if tac_total > 0 else 0 %}
+  {% set tac_pc    = (ns.nc / tac_total * 100) | round | int if tac_total > 0 else 0 %}
+
+  <div class="cov2-tactic" data-tactic="{{ tactic.shortname }}" id="tac-{{ tactic.shortname }}">
+
+    <!-- En-tête de la tactique -->
+    <div class="cov2-tactic__hd">
+      <div class="cov2-tactic__hd-left">
+        <h2 class="cov2-tactic__name">{{ tactic.name }}</h2>
+        <span class="cov2-tactic__total">{{ tac_total }} technique{{ 's' if tac_total > 1 }}</span>
+      </div>
+      <div class="cov2-tactic__hd-right">
+        <span class="cov2-tac-pct{% if tac_pct >= 60 %} cov2-tac-pct--good{% elif tac_pct >= 30 %} cov2-tac-pct--warn{% else %} cov2-tac-pct--bad{% endif %}">
+          {{ tac_pct }}%
+        </span>
+        <div class="cov2-tac-bar">
+          <div class="cov2-tac-bar__d" style="width:{{ tac_pd }}%"></div>
+          <div class="cov2-tac-bar__c" style="width:{{ tac_pc }}%"></div>
+        </div>
+        <div class="cov2-tac-pills">
+          {% if ns.nd > 0 %}<span class="db2-pill db2-pill--d">✓ {{ ns.nd }}</span>{% endif %}
+          {% if ns.nc > 0 %}<span class="db2-pill db2-pill--c">⚙ {{ ns.nc }}</span>{% endif %}
+          {% if ns.nn > 0 %}<span class="db2-pill db2-pill--n">✗ {{ ns.nn }}</span>{% endif %}
+        </div>
+      </div>
     </div>
 
-    <div class="coverage-tactic__grid">
+    <!-- Grille de tiles -->
+    <div class="cov2-tile-grid">
       {% for t in tactic.techniques %}
       <a href="/campaigns/{{ campaign.id }}#tech-{{ t.id }}"
-         class="coverage-tile coverage-tile--{{ t.status.value }}"
-         title="{{ t.attack_id }} — {{ t.name }} ({{ t.status.value | replace('_', ' ') }})">
-        <span class="coverage-tile__id">{{ t.attack_id }}</span>
-        <span class="coverage-tile__name">{{ t.name }}</span>
+         class="cov2-tile cov2-tile--{{ t.status.value }}"
+         data-status="{{ t.status.value }}"
+         data-tip-id="{{ t.attack_id }}"
+         data-tip-name="{{ t.name }}"
+         data-tip-note="{{ t.blue_note[:80] if t.blue_note else '' }}">
+        <span class="cov2-tile__id">{{ t.attack_id }}</span>
+        <span class="cov2-tile__name">{{ t.name }}</span>
+        {% if t.blue_note %}
+        <span class="cov2-tile__dot" aria-label="Note présente"></span>
+        {% endif %}
       </a>
       {% endfor %}
     </div>
-  </div>
+
+  </div><!-- /.cov2-tactic -->
   {% endfor %}
-</section>
+
+</div><!-- /.cov2-heatmap -->
 {% endif %}
 
+</div><!-- /.cov2-wrap -->
+
+<!-- ══ TOOLTIP GLOBAL ══════════════════════════════════════════════════════ -->
+<div class="cov2-tooltip" id="cov-tooltip" aria-hidden="true">
+  <div class="cov2-tooltip__id"   id="tip-id"></div>
+  <div class="cov2-tooltip__name" id="tip-name"></div>
+  <div class="cov2-tooltip__note" id="tip-note"></div>
+</div>
+
+<!-- ══ JAVASCRIPT ═══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── Animation ring ──────────────────────────────────────────────── */
+  var ring   = document.getElementById('cov-ring');
+  var pctEl  = document.getElementById('cov-pct');
+
+  if (ring && pctEl) {
+    var targetPct = parseInt(ring.dataset.pct || '0', 10);
+    var circ      = 439.82;
+    var targetOff = circ * (1 - targetPct / 100);
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    setTimeout(function () {
+      var start = null;
+      function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / 1200, 1);
+        var e = easeOut(p);
+        ring.style.strokeDashoffset = circ - (circ - targetOff) * e;
+        pctEl.textContent = Math.round(targetPct * e);
+        if (p < 1) requestAnimationFrame(tick);
+        else {
+          ring.style.strokeDashoffset = targetOff;
+          pctEl.textContent = targetPct;
+        }
+      }
+      requestAnimationFrame(tick);
+    }, 250);
+  }
+
+  /* ── Filtre par statut ───────────────────────────────────────────── */
+  var filterBtns = document.querySelectorAll('.cov2-filter-btn');
+  var hint       = document.getElementById('cov-filter-hint');
+
+  filterBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      /* Activer le bouton cliqué */
+      filterBtns.forEach(function (b) { b.classList.remove('cov2-filter-btn--active'); });
+      btn.classList.add('cov2-filter-btn--active');
+
+      var filter = btn.dataset.filter;
+
+      /* Afficher/masquer les tiles */
+      var allTiles = document.querySelectorAll('.cov2-tile');
+      var visible  = 0;
+      allTiles.forEach(function (tile) {
+        var match = filter === 'all' || tile.dataset.status === filter;
+        tile.classList.toggle('cov2-tile--hidden', !match);
+        if (match) visible++;
+      });
+
+      /* Masquer les sections de tactique vides */
+      document.querySelectorAll('.cov2-tactic').forEach(function (sec) {
+        var hasVisible = sec.querySelectorAll('.cov2-tile:not(.cov2-tile--hidden)').length > 0;
+        sec.classList.toggle('cov2-tactic--hidden', !hasVisible);
+      });
+
+      /* Hint de résultat */
+      if (hint) {
+        hint.textContent = filter === 'all'
+          ? ''
+          : visible + ' technique' + (visible > 1 ? 's' : '') + ' affichée' + (visible > 1 ? 's' : '');
+      }
+    });
+  });
+
+  /* ── Tooltip au survol des tiles ─────────────────────────────────── */
+  var tooltip  = document.getElementById('cov-tooltip');
+  var tipId    = document.getElementById('tip-id');
+  var tipName  = document.getElementById('tip-name');
+  var tipNote  = document.getElementById('tip-note');
+
+  if (tooltip) {
+    document.querySelectorAll('.cov2-tile').forEach(function (tile) {
+      tile.addEventListener('mouseenter', function () {
+        tipId.textContent   = tile.dataset.tipId   || '';
+        tipName.textContent = tile.dataset.tipName || '';
+        var note = tile.dataset.tipNote || '';
+        tipNote.textContent = note ? '📝 ' + note + (note.length >= 80 ? '…' : '') : '';
+        tipNote.style.display = note ? 'block' : 'none';
+        tooltip.classList.add('cov2-tooltip--visible');
+      });
+
+      tile.addEventListener('mousemove', function (e) {
+        var x = e.clientX + 16;
+        var y = e.clientY + 16;
+        /* Éviter que le tooltip sorte de l'écran */
+        if (x + 260 > window.innerWidth)  x = e.clientX - 260 - 8;
+        if (y + 100 > window.innerHeight) y = e.clientY - 100 - 8;
+        tooltip.style.left = x + 'px';
+        tooltip.style.top  = y + 'px';
+      });
+
+      tile.addEventListener('mouseleave', function () {
+        tooltip.classList.remove('cov2-tooltip--visible');
+      });
+    });
+  }
+
+  /* ── Sticky toolbar : ombre quand on scrolle ─────────────────────── */
+  var toolbar = document.getElementById('cov-toolbar');
+  if (toolbar) {
+    window.addEventListener('scroll', function () {
+      toolbar.classList.toggle('cov2-toolbar--stuck', window.scrollY > 80);
+    }, { passive: true });
+  }
+
+})();
+</script>
 {% endblock %}

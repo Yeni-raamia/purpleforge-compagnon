@@ -2,133 +2,253 @@
 {% block title %}Tableau de bord — PurpleForge Compagnon{% endblock %}
 
 {% block content %}
-<div class="page-wrap">
+<div class="db2-wrap">
 
-  <!-- ─── En-tête ────────────────────────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="page-header__left">
-      <h1 class="page-title">
-        <span class="page-title__icon">📊</span>
-        Tableau de bord
-      </h1>
-      <p class="page-subtitle">Vue d'ensemble de toutes les campagnes purple team</p>
-    </div>
-    <div class="page-header__actions">
-      <a href="/campaigns/" class="btn btn--outline">+ Nouvelle campagne</a>
-    </div>
-  </div>
+  <!-- ════════════════════════════════════════════════════════════════════
+       HERO BAND — ring de détection + compteurs clés
+       ════════════════════════════════════════════════════════════════════ -->
+  <div class="db2-hero">
 
-  <!-- ─── Compteurs globaux ─────────────────────────────────────────────── -->
-  <div class="db-kpi-grid">
+    <!-- Orbes lumineux d'arrière-plan -->
+    <div class="db2-hero__orb db2-hero__orb--1" aria-hidden="true"></div>
+    <div class="db2-hero__orb db2-hero__orb--2" aria-hidden="true"></div>
+    <div class="db2-hero__orb db2-hero__orb--3" aria-hidden="true"></div>
 
-    <div class="db-kpi db-kpi--campaigns">
-      <span class="db-kpi__icon">🗂</span>
-      <div class="db-kpi__body">
-        <span class="db-kpi__value">{{ stats.nb_campaigns }}</span>
-        <span class="db-kpi__label">Campagne{% if stats.nb_campaigns > 1 %}s{% endif %}</span>
+    <!-- Grille de points (texture) -->
+    <div class="db2-hero__dots" aria-hidden="true"></div>
+
+    <div class="db2-hero__inner">
+
+      <!-- ── Titre ────────────────────────────────────────────────────── -->
+      <div class="db2-hero__left">
+        <span class="db2-eyebrow">Purple Team Operations Center</span>
+        <h1 class="db2-hero__title">Tableau<br>de bord</h1>
+        <p class="db2-hero__sub">
+          Synthèse de <strong>{{ stats.nb_campaigns }}</strong>
+          campagne{% if stats.nb_campaigns != 1 %}s{% endif %}
+          &middot; {{ stats.nb_techniques }}
+          technique{% if stats.nb_techniques != 1 %}s{% endif %}
+        </p>
+        <a href="/campaigns/" class="db2-hero__cta">
+          <span aria-hidden="true">＋</span> Nouvelle campagne
+        </a>
       </div>
-    </div>
 
-    <div class="db-kpi db-kpi--techniques">
-      <span class="db-kpi__icon">⚔️</span>
-      <div class="db-kpi__body">
-        <span class="db-kpi__value">{{ stats.nb_techniques }}</span>
-        <span class="db-kpi__label">Technique{% if stats.nb_techniques > 1 %}s{% endif %} jouées</span>
+      <!-- ── Grande ring de détection ────────────────────────────────── -->
+      <div class="db2-ring-zone">
+        <div class="db2-ring-wrap">
+          <svg class="db2-ring-svg" viewBox="0 0 160 160" aria-label="Taux de détection global : {{ stats.global_pct_detecte }}%">
+            <defs>
+              <linearGradient id="db2RingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%"   stop-color="#4ade80"/>
+                <stop offset="55%"  stop-color="#22d3ee"/>
+                <stop offset="100%" stop-color="#818cf8"/>
+              </linearGradient>
+              <filter id="db2RingGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <!-- Piste (track) -->
+            <circle cx="80" cy="80" r="70"
+              fill="none"
+              stroke="rgba(255,255,255,0.06)"
+              stroke-width="10"/>
+
+            <!-- Piste secondaire (ticks subtils toutes les 10%) -->
+            {% for i in range(10) %}
+            <line
+              x1="80" y1="12"
+              x2="80" y2="18"
+              stroke="rgba(255,255,255,0.12)"
+              stroke-width="1.5"
+              transform="rotate({{ i * 36 }} 80 80)"/>
+            {% endfor %}
+
+            <!-- Arc de progression (animé par JS) -->
+            <circle cx="80" cy="80" r="70"
+              fill="none"
+              stroke="url(#db2RingGrad)"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-dasharray="439.82"
+              stroke-dashoffset="439.82"
+              transform="rotate(-90 80 80)"
+              filter="url(#db2RingGlow)"
+              class="db2-ring__arc"
+              id="global-ring"
+              data-pct="{{ stats.global_pct_detecte }}"/>
+
+          </svg>
+
+          <!-- Valeur centrale -->
+          <div class="db2-ring__center">
+            <span class="db2-ring__pct" id="global-pct-display">0</span>
+            <span class="db2-ring__unit">%</span>
+            <span class="db2-ring__label">détecté</span>
+          </div>
+        </div>
+        <p class="db2-ring-caption">Taux de détection global</p>
       </div>
-    </div>
 
-    <div class="db-kpi db-kpi--detecte">
-      <span class="db-kpi__icon">🛡️</span>
-      <div class="db-kpi__body">
-        <span class="db-kpi__value">{{ stats.global_counts.detecte }}</span>
-        <span class="db-kpi__label">Détectées</span>
+      <!-- ── 3 compteurs ────────────────────────────────────────────── -->
+      <div class="db2-hero__right">
+
+        <div class="db2-stat">
+          <span class="db2-stat__icon">🗂</span>
+          <span class="db2-stat__value" data-count="{{ stats.nb_campaigns }}">0</span>
+          <span class="db2-stat__label">
+            Campagne{% if stats.nb_campaigns != 1 %}s{% endif %}
+          </span>
+        </div>
+
+        <div class="db2-stat__sep"></div>
+
+        <div class="db2-stat">
+          <span class="db2-stat__icon">⚔</span>
+          <span class="db2-stat__value" data-count="{{ stats.nb_techniques }}">0</span>
+          <span class="db2-stat__label">
+            Technique{% if stats.nb_techniques != 1 %}s{% endif %}
+          </span>
+        </div>
+
+        <div class="db2-stat__sep"></div>
+
+        <div class="db2-stat">
+          <span class="db2-stat__icon">🛡</span>
+          <span class="db2-stat__value" data-count="{{ stats.global_counts.detecte }}">0</span>
+          <span class="db2-stat__label">Détectées</span>
+        </div>
+
       </div>
-    </div>
 
-    <div class="db-kpi db-kpi--rate">
-      <span class="db-kpi__icon">📈</span>
-      <div class="db-kpi__body">
-        <span class="db-kpi__value">{{ stats.global_pct_detecte }}%</span>
-        <span class="db-kpi__label">Taux de détection global</span>
-      </div>
-    </div>
+    </div><!-- /.db2-hero__inner -->
+  </div><!-- /.db2-hero -->
 
-  </div>
-
-  <!-- ─── Barre globale ────────────────────────────────────────────────── -->
+  <!-- ════════════════════════════════════════════════════════════════════
+       BARRE DE STATUT — répartition colorée pleine largeur
+       ════════════════════════════════════════════════════════════════════ -->
   {% if stats.nb_techniques > 0 %}
-  <div class="db-global-bar">
-    <div class="db-global-bar__labels">
-      <span class="db-global-bar__label db-global-bar__label--detecte">
-        Détecté · {{ stats.global_counts.detecte }}
-      </span>
-      <span class="db-global-bar__label db-global-bar__label--construire">
-        À construire · {{ stats.global_counts.a_construire }}
-      </span>
-      <span class="db-global-bar__label db-global-bar__label--non">
-        Non détecté · {{ stats.global_counts.non_detecte }}
-      </span>
+  {% set pct_d = (stats.global_counts.detecte      / stats.nb_techniques * 100) | round | int %}
+  {% set pct_c = (stats.global_counts.a_construire  / stats.nb_techniques * 100) | round | int %}
+  {% set pct_n = (stats.global_counts.non_detecte   / stats.nb_techniques * 100) | round | int %}
+  <div class="db2-status-bar">
+    {% if pct_d > 0 %}
+    <div class="db2-seg db2-seg--d" style="flex: {{ pct_d }}">
+      <span class="db2-seg__label">✓ Détecté &middot; {{ pct_d }}%</span>
     </div>
-    <div class="coverage-bar" style="height:12px; border-radius:6px; overflow:hidden; display:flex;">
-      {% set pct_d = (stats.global_counts.detecte / stats.nb_techniques * 100) | round | int %}
-      {% set pct_c = (stats.global_counts.a_construire / stats.nb_techniques * 100) | round | int %}
-      {% set pct_n = (stats.global_counts.non_detecte / stats.nb_techniques * 100) | round | int %}
-      <div style="width:{{ pct_d }}%; background:var(--s-detecte);"></div>
-      <div style="width:{{ pct_c }}%; background:var(--s-construire);"></div>
-      <div style="width:{{ pct_n }}%; background:var(--s-non);"></div>
+    {% endif %}
+    {% if pct_c > 0 %}
+    <div class="db2-seg db2-seg--c" style="flex: {{ pct_c }}">
+      <span class="db2-seg__label">⚙ À construire &middot; {{ pct_c }}%</span>
     </div>
+    {% endif %}
+    {% if pct_n > 0 %}
+    <div class="db2-seg db2-seg--n" style="flex: {{ pct_n }}">
+      <span class="db2-seg__label">✗ Non détecté &middot; {{ pct_n }}%</span>
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 
-  <div class="db-layout">
+  <!-- ════════════════════════════════════════════════════════════════════
+       CORPS PRINCIPAL — campagnes + panneau latéral
+       ════════════════════════════════════════════════════════════════════ -->
+  <div class="db2-body">
 
-    <!-- ─── Campagnes ──────────────────────────────────────────────────── -->
-    <section class="db-section db-section--campaigns">
-      <h2 class="db-section__title">Campagnes</h2>
+    <!-- ── Campagnes ──────────────────────────────────────────────────── -->
+    <section class="db2-campaigns-zone">
+
+      <div class="db2-zone-hd">
+        <h2 class="db2-zone-title">
+          Campagnes
+          <span class="db2-zone-badge">{{ stats.campaigns | length }}</span>
+        </h2>
+      </div>
 
       {% if stats.campaigns %}
-      <div class="db-campaigns">
+      <div class="db2-camp-grid">
         {% for item in stats.campaigns %}
-        <a href="/campaigns/{{ item.campaign.id }}" class="db-campaign-card">
 
-          <div class="db-campaign-card__header">
-            <span class="db-campaign-card__name">{{ item.campaign.name }}</span>
-            <span class="db-campaign-card__count">{{ item.total }} technique{% if item.total > 1 %}s{% endif %}</span>
+        {# ── Couleur de santé selon le taux de détection ── #}
+        {% if item.pct_detecte >= 60 %}{% set health = 'good' %}
+        {% elif item.pct_detecte >= 30 %}{% set health = 'warn' %}
+        {% else %}{% set health = 'bad' %}{% endif %}
+
+        <a href="/campaigns/{{ item.campaign.id }}"
+           class="db2-camp-card db2-camp-card--{{ health }}">
+
+          <!-- Mini ring par campagne -->
+          <div class="db2-camp-ring">
+            {% set circ = 113.097 %}
+            {% if item.total > 0 %}
+            {% set off = (circ * (1 - item.pct_detecte / 100)) | round(2) %}
+            {% else %}
+            {% set off = circ %}
+            {% endif %}
+            <svg viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="18"
+                fill="none"
+                stroke="rgba(255,255,255,0.08)"
+                stroke-width="3.5"/>
+              <circle cx="20" cy="20" r="18"
+                fill="none"
+                stroke="{% if health == 'good' %}#4ade80{% elif health == 'warn' %}#f59e0b{% else %}#f87171{% endif %}"
+                stroke-width="3.5"
+                stroke-linecap="round"
+                stroke-dasharray="{{ circ }}"
+                stroke-dashoffset="{{ off }}"
+                transform="rotate(-90 20 20)"/>
+            </svg>
+            <span class="db2-camp-ring__pct">{{ item.pct_detecte }}%</span>
           </div>
 
-          {% if item.campaign.description %}
-          <p class="db-campaign-card__desc">
-            {{ item.campaign.description[:80] }}{% if item.campaign.description | length > 80 %}…{% endif %}
-          </p>
-          {% endif %}
+          <!-- Corps de la carte -->
+          <div class="db2-camp-card__body">
+            <h3 class="db2-camp-card__name">{{ item.campaign.name }}</h3>
 
-          <!-- Mini-barre de progression -->
-          {% if item.total > 0 %}
-          <div class="db-campaign-card__bar">
-            {% set pd = (item.counts.detecte / item.total * 100) | round | int %}
-            {% set pc = (item.counts.a_construire / item.total * 100) | round | int %}
-            {% set pn = (item.counts.non_detecte / item.total * 100) | round | int %}
-            <div style="width:{{ pd }}%; background:var(--s-detecte);"></div>
-            <div style="width:{{ pc }}%; background:var(--s-construire);"></div>
-            <div style="width:{{ pn }}%; background:var(--s-non);"></div>
-          </div>
-          <div class="db-campaign-card__stats">
-            <span class="db-campaign-card__pct" style="color:var(--s-detecte)">
-              {{ item.pct_detecte }}% détecté
-            </span>
-            <div class="db-campaign-card__badges">
-              <span class="db-mini-badge db-mini-badge--detecte">✓ {{ item.counts.detecte }}</span>
-              <span class="db-mini-badge db-mini-badge--construire">⚙ {{ item.counts.a_construire }}</span>
-              <span class="db-mini-badge db-mini-badge--non">✗ {{ item.counts.non_detecte }}</span>
+            {% if item.campaign.description %}
+            <p class="db2-camp-card__desc">
+              {{ item.campaign.description[:75] }}{% if item.campaign.description | length > 75 %}…{% endif %}
+            </p>
+            {% endif %}
+
+            {% if item.campaign.tags %}
+            <div class="db2-camp-card__tags">
+              {% for tag in item.campaign.tags.split(',') %}{% set t = tag.strip() %}{% if t %}
+              <span class="db2-apt-chip">{{ t }}</span>
+              {% endif %}{% endfor %}
             </div>
+            {% endif %}
           </div>
-          {% else %}
-          <p class="db-campaign-card__empty">Aucune technique ajoutée</p>
-          {% endif %}
 
-          <div class="db-campaign-card__links">
-            <span class="db-campaign-card__link">Détail →</span>
-            <span class="db-campaign-card__date">{{ item.campaign.created_at.strftime("%d/%m/%Y") }}</span>
+          <!-- Pied de la carte -->
+          <div class="db2-camp-card__foot">
+            {% if item.total > 0 %}
+            <div class="db2-mini-bar">
+              {% set pd = (item.counts.detecte      / item.total * 100) | round | int %}
+              {% set pc = (item.counts.a_construire  / item.total * 100) | round | int %}
+              {% set pn = (item.counts.non_detecte   / item.total * 100) | round | int %}
+              <div class="db2-mini-seg db2-mini-seg--d" style="width:{{ pd }}%"></div>
+              <div class="db2-mini-seg db2-mini-seg--c" style="width:{{ pc }}%"></div>
+              <div class="db2-mini-seg db2-mini-seg--n" style="width:{{ pn }}%"></div>
+            </div>
+            <div class="db2-camp-card__row">
+              <div class="db2-camp-pills">
+                <span class="db2-pill db2-pill--d">✓ {{ item.counts.detecte }}</span>
+                <span class="db2-pill db2-pill--c">⚙ {{ item.counts.a_construire }}</span>
+                <span class="db2-pill db2-pill--n">✗ {{ item.counts.non_detecte }}</span>
+              </div>
+              <span class="db2-camp-date">{{ item.campaign.created_at.strftime("%d/%m/%y") }}</span>
+            </div>
+            {% else %}
+            <span class="db2-camp-empty">Aucune technique ajoutée</span>
+            {% endif %}
+            <span class="db2-camp-arrow" aria-hidden="true">→</span>
           </div>
 
         </a>
@@ -136,31 +256,35 @@
       </div>
 
       {% else %}
-      <div class="empty-state" style="padding:2rem; text-align:center;">
-        <p style="color:var(--gris); margin-bottom:1rem;">Aucune campagne pour l'instant.</p>
+      <div class="db2-empty">
+        <span class="db2-empty__icon" aria-hidden="true">🗂</span>
+        <p class="db2-empty__msg">Aucune campagne pour l'instant.</p>
         <a href="/campaigns/" class="btn btn--primary">Créer la première campagne →</a>
       </div>
       {% endif %}
+
     </section>
 
-    <!-- ─── Panneau latéral ─────────────────────────────────────────────── -->
-    <aside class="db-aside">
+    <!-- ── Panneau latéral ────────────────────────────────────────────── -->
+    <aside class="db2-sidebar">
 
       <!-- Top tactiques -->
       {% if stats.top_tactics %}
-      <div class="db-widget">
-        <h3 class="db-widget__title">🎯 Tactiques les plus jouées</h3>
-        <ul class="db-tactic-list">
-          {% set max_count = stats.top_tactics[0].count %}
+      <div class="db2-widget">
+        <h3 class="db2-widget__title">
+          <span aria-hidden="true">🎯</span> Tactiques les plus jouées
+        </h3>
+        <ul class="db2-tactic-list">
+          {% set max_t = stats.top_tactics[0].count %}
           {% for t in stats.top_tactics %}
-          <li class="db-tactic-item">
-            <span class="db-tactic-item__name">{{ t.name }}</span>
-            <div class="db-tactic-item__bar-wrap">
-              <div class="db-tactic-item__bar"
-                style="width: {{ (t.count / max_count * 100) | round | int }}%">
+          <li class="db2-tactic-item">
+            <span class="db2-tactic-name">{{ t.name }}</span>
+            <div class="db2-tactic-track">
+              <div class="db2-tactic-bar"
+                style="width: {{ (t.count / max_t * 100) | round | int }}%">
               </div>
             </div>
-            <span class="db-tactic-item__count">{{ t.count }}</span>
+            <span class="db2-tactic-n">{{ t.count }}</span>
           </li>
           {% endfor %}
         </ul>
@@ -169,46 +293,128 @@
 
       <!-- Répartition globale -->
       {% if stats.nb_techniques > 0 %}
-      <div class="db-widget">
-        <h3 class="db-widget__title">📊 Répartition globale</h3>
-        <ul class="db-legend">
-          <li class="db-legend__item">
-            <span class="db-legend__dot" style="background:var(--s-detecte)"></span>
-            <span>Détecté</span>
-            <strong>{{ stats.global_counts.detecte }}</strong>
-          </li>
-          <li class="db-legend__item">
-            <span class="db-legend__dot" style="background:var(--s-construire)"></span>
-            <span>À construire</span>
-            <strong>{{ stats.global_counts.a_construire }}</strong>
-          </li>
-          <li class="db-legend__item">
-            <span class="db-legend__dot" style="background:var(--s-non)"></span>
-            <span>Non détecté</span>
-            <strong>{{ stats.global_counts.non_detecte }}</strong>
-          </li>
-        </ul>
+      <div class="db2-widget">
+        <h3 class="db2-widget__title">
+          <span aria-hidden="true">📊</span> Répartition globale
+        </h3>
+        <div class="db2-distrib">
+          <div class="db2-distrib__row">
+            <span class="db2-distrib__dot db2-distrib__dot--d"></span>
+            <span class="db2-distrib__name">Détecté</span>
+            <strong class="db2-distrib__val">{{ stats.global_counts.detecte }}</strong>
+          </div>
+          <div class="db2-distrib__row">
+            <span class="db2-distrib__dot db2-distrib__dot--c"></span>
+            <span class="db2-distrib__name">À construire</span>
+            <strong class="db2-distrib__val">{{ stats.global_counts.a_construire }}</strong>
+          </div>
+          <div class="db2-distrib__row">
+            <span class="db2-distrib__dot db2-distrib__dot--n"></span>
+            <span class="db2-distrib__name">Non détecté</span>
+            <strong class="db2-distrib__val">{{ stats.global_counts.non_detecte }}</strong>
+          </div>
+        </div>
       </div>
       {% endif %}
 
       <!-- Actions rapides -->
-      <div class="db-widget">
-        <h3 class="db-widget__title">⚡ Actions rapides</h3>
-        <div class="db-quick-actions">
-          <a href="/campaigns/" class="db-quick-btn">
-            <span>🗂</span> Toutes les campagnes
+      <div class="db2-widget">
+        <h3 class="db2-widget__title">
+          <span aria-hidden="true">⚡</span> Actions rapides
+        </h3>
+        <div class="db2-actions">
+          <a href="/campaigns/" class="db2-action-btn">
+            <span aria-hidden="true">🗂</span> Toutes les campagnes
+          </a>
+          <a href="/search" class="db2-action-btn">
+            <span aria-hidden="true">🔍</span> Recherche globale
           </a>
           {% if current_user.is_admin %}
-          <a href="/admin/users" class="db-quick-btn">
-            <span>👥</span> Gérer les utilisateurs
+          <a href="/admin/users" class="db2-action-btn">
+            <span aria-hidden="true">👥</span> Gérer les utilisateurs
           </a>
           {% endif %}
+          <a href="/account" class="db2-action-btn">
+            <span aria-hidden="true">⚙</span> Mon compte
+          </a>
         </div>
       </div>
 
     </aside>
 
-  </div>
+  </div><!-- /.db2-body -->
 
-</div>
+</div><!-- /.db2-wrap -->
+
+<!-- ════ ANIMATIONS JAVASCRIPT ══════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* Courbe d'accélération ease-out cubique */
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  /* Anime une valeur de 0 à target en `duration` ms */
+  function animateTo(getEl, getter, setter, duration, delay) {
+    setTimeout(function () {
+      var start = null;
+      var target = getter();
+      function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / duration, 1);
+        setter(Math.round(target * easeOut(p)));
+        if (p < 1) requestAnimationFrame(tick);
+        else setter(target);
+      }
+      requestAnimationFrame(tick);
+    }, delay || 0);
+  }
+
+  /* ── Grande ring ── */
+  var ring    = document.getElementById('global-ring');
+  var display = document.getElementById('global-pct-display');
+
+  if (ring && display) {
+    var targetPct = parseInt(ring.dataset.pct || '0', 10);
+    var circ      = 439.82;
+    var targetOff = circ * (1 - targetPct / 100);
+    var DURATION  = 1400;
+
+    setTimeout(function () {
+      var start = null;
+      function tick(ts) {
+        if (!start) start = ts;
+        var p    = Math.min((ts - start) / DURATION, 1);
+        var ease = easeOut(p);
+        ring.style.strokeDashoffset = circ - (circ - targetOff) * ease;
+        display.textContent = Math.round(targetPct * ease);
+        if (p < 1) requestAnimationFrame(tick);
+        else {
+          ring.style.strokeDashoffset = targetOff;
+          display.textContent = targetPct;
+        }
+      }
+      requestAnimationFrame(tick);
+    }, 250);
+  }
+
+  /* ── Compteurs animés (héro droit) ── */
+  document.querySelectorAll('.db2-stat__value[data-count]').forEach(function (el) {
+    var target = parseInt(el.dataset.count || '0', 10);
+    if (target === 0) { el.textContent = '0'; return; }
+    var start = null;
+    setTimeout(function () {
+      function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / 1000, 1);
+        el.textContent = Math.round(target * easeOut(p));
+        if (p < 1) requestAnimationFrame(tick);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(tick);
+    }, 300);
+  });
+
+})();
+</script>
 {% endblock %}

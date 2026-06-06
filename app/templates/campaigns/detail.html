@@ -83,11 +83,22 @@
     <a href="/campaigns/{{ campaign.id }}/coverage" class="btn btn--secondary">
       Voir la couverture
     </a>
-    <a href="/campaigns/{{ campaign.id }}/export" class="btn btn--secondary" download>
-      ⬇ Navigator JSON
-    </a>
     <a href="/campaigns/{{ campaign.id }}/print" class="btn btn--secondary" target="_blank">
       🖨️ Rapport PDF
+    </a>
+
+    <!-- Exports -->
+    <a href="/campaigns/{{ campaign.id }}/export/json" class="btn btn--outline" download
+       title="Export réimportable dans PurpleForge">
+      ⬇ JSON PurpleForge
+    </a>
+    <a href="/campaigns/{{ campaign.id }}/export/csv" class="btn btn--outline" download
+       title="Export tableur (Excel, Calc…)">
+      ⬇ CSV
+    </a>
+    <a href="/campaigns/{{ campaign.id }}/export" class="btn btn--outline" download
+       title="Export pour ATT&CK Navigator">
+      ⬇ Navigator JSON
     </a>
   </div>
 
