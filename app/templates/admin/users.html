@@ -114,7 +114,24 @@
         <div class="admin-form__group">
           <label class="admin-form__label" for="new-password">Mot de passe temporaire</label>
           <input class="admin-form__input" type="password" id="new-password" name="password"
-            placeholder="min. 8 caractères" minlength="8" required>
+            placeholder="min. 12 car. + maj + chiffre + spécial" required>
+
+          <!-- Jauge de force -->
+          <div class="pwd-strength" id="adm-pwd-strength" style="margin-top:.5rem;">
+            <div class="pwd-strength__bar">
+              <div class="pwd-strength__fill" id="adm-pwd-fill"></div>
+            </div>
+            <span class="pwd-strength__label" id="adm-pwd-label"></span>
+          </div>
+
+          <!-- Critères compacts -->
+          <ul class="pwd-rules pwd-rules--compact" id="adm-pwd-rules">
+            <li class="pwd-rule" id="adm-rule-len">  12 caractères</li>
+            <li class="pwd-rule" id="adm-rule-upper">Majuscule</li>
+            <li class="pwd-rule" id="adm-rule-lower">Minuscule</li>
+            <li class="pwd-rule" id="adm-rule-digit">Chiffre</li>
+            <li class="pwd-rule" id="adm-rule-spec"> Spécial</li>
+          </ul>
         </div>
 
         <div class="admin-form__check">
@@ -122,7 +139,7 @@
           <label for="new-is-admin">Administrateur</label>
         </div>
 
-        <button type="submit" class="admin-form__btn">
+        <button type="submit" class="admin-form__btn" id="adm-submit-btn">
           Ajouter →
         </button>
 
@@ -132,4 +149,52 @@
   </div>
 
 </div>
+
+<!-- ── Indicateur de force (formulaire admin) ── -->
+<script>
+(function () {
+  const pwdInput  = document.getElementById('new-password');
+  const fill      = document.getElementById('adm-pwd-fill');
+  const label     = document.getElementById('adm-pwd-label');
+  const submitBtn = document.getElementById('adm-submit-btn');
+
+  const rules = {
+    'adm-rule-len':   p => p.length >= 12,
+    'adm-rule-upper': p => /[A-Z]/.test(p),
+    'adm-rule-lower': p => /[a-z]/.test(p),
+    'adm-rule-digit': p => /\d/.test(p),
+    'adm-rule-spec':  p => /[^A-Za-z0-9]/.test(p),
+  };
+
+  const levels = [
+    { label: '',            color: 'transparent', width: '0%'   },
+    { label: 'Très faible', color: '#dc2626',     width: '20%'  },
+    { label: 'Faible',      color: '#ea580c',     width: '40%'  },
+    { label: 'Moyen',       color: '#ca8a04',     width: '60%'  },
+    { label: 'Fort',        color: '#16a34a',     width: '80%'  },
+    { label: 'Très fort',   color: '#059669',     width: '100%' },
+  ];
+
+  if (pwdInput) {
+    pwdInput.addEventListener('input', function () {
+      const pwd = pwdInput.value;
+      let score = 0;
+      for (const [id, test] of Object.entries(rules)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const ok = test(pwd);
+        el.classList.toggle('pwd-rule--ok', ok);
+        el.classList.toggle('pwd-rule--ko', pwd.length > 0 && !ok);
+        if (ok) score++;
+      }
+      const lvl = pwd.length === 0 ? 0 : Math.max(1, score);
+      fill.style.width           = levels[lvl].width;
+      fill.style.backgroundColor = levels[lvl].color;
+      label.textContent          = levels[lvl].label;
+      label.style.color          = levels[lvl].color;
+      submitBtn.disabled         = pwd.length > 0 && score < 5;
+    });
+  }
+})();
+</script>
 {% endblock %}

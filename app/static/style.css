@@ -1709,6 +1709,106 @@ select.form-control { cursor: pointer; }
   line-height: 1.6;
 }
 
+/* ─── Jauge de force du mot de passe ──────────────────────────────────────── */
+
+.pwd-strength {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .5rem;
+}
+
+.pwd-strength__bar {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pwd-strength__fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  transition: width .3s ease, background-color .3s ease;
+}
+
+.pwd-strength__label {
+  font-size: .72rem;
+  font-weight: 700;
+  min-width: 70px;
+  text-align: right;
+  transition: color .3s;
+}
+
+/* Liste des critères */
+.pwd-rules {
+  list-style: none;
+  margin: .6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.pwd-rules--compact {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: .3rem .6rem;
+}
+
+.pwd-rule {
+  font-size: .75rem;
+  color: rgba(255,255,255,.4);
+  padding-left: 1.2em;
+  position: relative;
+  transition: color .2s;
+}
+
+.pwd-rule::before {
+  content: "○";
+  position: absolute;
+  left: 0;
+  transition: content .2s, color .2s;
+}
+
+.pwd-rule--ok {
+  color: #4ade80;
+}
+
+.pwd-rule--ok::before {
+  content: "✓";
+  color: #4ade80;
+}
+
+.pwd-rule--ko {
+  color: #f87171;
+}
+
+.pwd-rule--ko::before {
+  content: "✗";
+  color: #f87171;
+}
+
+/* Correspondance des mots de passe */
+.pwd-match {
+  font-size: .78rem;
+  font-weight: 600;
+  margin-top: .35rem;
+  display: block;
+}
+
+.pwd-match--ok { color: #4ade80; }
+.pwd-match--ko { color: #f87171; }
+
+/* Bouton désactivé pendant que le mdp est trop faible */
+.auth-form__btn:disabled,
+.admin-form__btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* NAVIGATION — zone utilisateur connecté                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */

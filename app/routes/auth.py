@@ -15,7 +15,7 @@ from sqlmodel import Session, select
 
 from app.database import get_session
 from app.models.user import User
-from app.services.auth import hash_password, verify_password
+from app.services.auth import hash_password, verify_password, validate_password_strength
 
 router = APIRouter(tags=["auth"])
 
@@ -104,8 +104,12 @@ def setup(
     username = username.strip().lower()
     if len(username) < 3:
         errors.append("L'identifiant doit faire au moins 3 caractères.")
-    if len(password) < 8:
-        errors.append("Le mot de passe doit faire au moins 8 caractères.")
+
+    # Vérification de la robustesse du mot de passe.
+    pwd_errors = validate_password_strength(password)
+    if pwd_errors:
+        errors.append("Mot de passe trop faible — il lui manque : " + ", ".join(pwd_errors) + ".")
+
     if password != password2:
         errors.append("Les deux mots de passe ne correspondent pas.")
 

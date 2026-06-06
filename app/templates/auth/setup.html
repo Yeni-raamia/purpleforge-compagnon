@@ -16,7 +16,7 @@
       </p>
     </div>
 
-    <!-- Message d'erreur -->
+    <!-- Message d'erreur serveur -->
     {% if error %}
     <div class="auth-alert">
       <span class="auth-alert__icon">⚠️</span>
@@ -25,11 +25,11 @@
     {% endif %}
 
     <!-- Formulaire de création du premier admin -->
-    <form method="post" action="/setup" class="auth-form">
+    <form method="post" action="/setup" class="auth-form" id="setup-form">
 
       <div class="auth-form__group">
         <label class="auth-form__label" for="username">
-          Identifiant <span class="auth-form__hint">(min. 3 caractères, en minuscules)</span>
+          Identifiant <span class="auth-form__hint">(min. 3 caractères)</span>
         </label>
         <input
           class="auth-form__input"
@@ -37,7 +37,6 @@
           id="username"
           name="username"
           placeholder="ex : alice"
-          pattern="[a-z0-9_\-]+"
           minlength="3"
           autocomplete="username"
           autofocus
@@ -61,18 +60,34 @@
 
       <div class="auth-form__group">
         <label class="auth-form__label" for="password">
-          Mot de passe <span class="auth-form__hint">(min. 8 caractères)</span>
+          Mot de passe
         </label>
         <input
           class="auth-form__input"
           type="password"
           id="password"
           name="password"
-          placeholder="••••••••"
-          minlength="8"
+          placeholder="••••••••••••"
           autocomplete="new-password"
           required
         >
+
+        <!-- Jauge de force -->
+        <div class="pwd-strength" id="pwd-strength">
+          <div class="pwd-strength__bar">
+            <div class="pwd-strength__fill" id="pwd-fill"></div>
+          </div>
+          <span class="pwd-strength__label" id="pwd-label"></span>
+        </div>
+
+        <!-- Critères -->
+        <ul class="pwd-rules" id="pwd-rules">
+          <li class="pwd-rule" id="rule-len">  12 caractères minimum</li>
+          <li class="pwd-rule" id="rule-upper">Une majuscule (A–Z)</li>
+          <li class="pwd-rule" id="rule-lower">Une minuscule (a–z)</li>
+          <li class="pwd-rule" id="rule-digit">Un chiffre (0–9)</li>
+          <li class="pwd-rule" id="rule-spec"> Un caractère spécial (!@#$%…)</li>
+        </ul>
       </div>
 
       <div class="auth-form__group">
@@ -82,13 +97,14 @@
           type="password"
           id="password2"
           name="password2"
-          placeholder="••••••••"
+          placeholder="••••••••••••"
           autocomplete="new-password"
           required
         >
+        <span class="pwd-match" id="pwd-match"></span>
       </div>
 
-      <button type="submit" class="auth-form__btn">
+      <button type="submit" class="auth-form__btn" id="submit-btn">
         Créer mon compte et démarrer →
       </button>
 
@@ -102,4 +118,71 @@
   </div>
 
 </div>
+
+<!-- ── Indicateur de force de mot de passe (JS pur, sans librairie) ── -->
+<script>
+(function () {
+  const pwdInput  = document.getElementById('password');
+  const pwd2Input = document.getElementById('password2');
+  const fill      = document.getElementById('pwd-fill');
+  const label     = document.getElementById('pwd-label');
+  const matchEl   = document.getElementById('pwd-match');
+  const submitBtn = document.getElementById('submit-btn');
+
+  const rules = {
+    'rule-len':   p => p.length >= 12,
+    'rule-upper': p => /[A-Z]/.test(p),
+    'rule-lower': p => /[a-z]/.test(p),
+    'rule-digit': p => /\d/.test(p),
+    'rule-spec':  p => /[^A-Za-z0-9]/.test(p),
+  };
+
+  const levels = [
+    { label: '',          color: 'transparent', width: '0%'   },
+    { label: 'Très faible', color: '#dc2626',   width: '20%'  },
+    { label: 'Faible',      color: '#ea580c',   width: '40%'  },
+    { label: 'Moyen',       color: '#ca8a04',   width: '60%'  },
+    { label: 'Fort',        color: '#16a34a',   width: '80%'  },
+    { label: 'Très fort',   color: '#059669',   width: '100%' },
+  ];
+
+  function checkPassword() {
+    const pwd = pwdInput.value;
+    let score = 0;
+
+    for (const [id, test] of Object.entries(rules)) {
+      const el = document.getElementById(id);
+      const ok = test(pwd);
+      el.classList.toggle('pwd-rule--ok', ok);
+      el.classList.toggle('pwd-rule--ko', pwd.length > 0 && !ok);
+      if (ok) score++;
+    }
+
+    const lvl = pwd.length === 0 ? 0 : Math.max(1, score);
+    fill.style.width           = levels[lvl].width;
+    fill.style.backgroundColor = levels[lvl].color;
+    label.textContent          = levels[lvl].label;
+    label.style.color          = levels[lvl].color;
+
+    checkMatch();
+    submitBtn.disabled = pwd.length > 0 && score < 5;
+  }
+
+  function checkMatch() {
+    const pwd  = pwdInput.value;
+    const pwd2 = pwd2Input.value;
+    if (!pwd2) { matchEl.textContent = ''; return; }
+    if (pwd === pwd2) {
+      matchEl.textContent = '✓ Les mots de passe correspondent';
+      matchEl.className   = 'pwd-match pwd-match--ok';
+    } else {
+      matchEl.textContent = '✗ Les mots de passe ne correspondent pas';
+      matchEl.className   = 'pwd-match pwd-match--ko';
+    }
+  }
+
+  pwdInput.addEventListener('input', checkPassword);
+  pwd2Input.addEventListener('input', checkMatch);
+})();
+</script>
 {% endblock %}

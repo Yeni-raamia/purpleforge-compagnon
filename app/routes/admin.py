@@ -17,7 +17,7 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.dependencies import require_admin
 from app.models.user import User
-from app.services.auth import hash_password
+from app.services.auth import hash_password, validate_password_strength
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -56,8 +56,11 @@ def create_user(
     errors: list[str] = []
     if len(username) < 3:
         errors.append("L'identifiant doit faire au moins 3 caractères.")
-    if len(password) < 8:
-        errors.append("Le mot de passe doit faire au moins 8 caractères.")
+
+    # Vérification de la robustesse du mot de passe.
+    pwd_errors = validate_password_strength(password)
+    if pwd_errors:
+        errors.append("Mot de passe trop faible — il lui manque : " + ", ".join(pwd_errors) + ".")
 
     # Vérifier que l'identifiant n'est pas déjà pris.
     if session.exec(select(User).where(User.username == username)).first():
