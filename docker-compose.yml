@@ -2,7 +2,18 @@ services:
   purpleforge:
     build: .
     ports:
-      - "8000:8000"       # port local:port conteneur
+      - "8000:8000"         # accès depuis le navigateur : http://localhost:8000
+
     volumes:
-      - ./purpleforge.db:/app/purpleforge.db   # la base SQLite persiste en dehors du conteneur
-    restart: unless-stopped
+      # La base de données SQLite survit aux redémarrages du conteneur.
+      - ./purpleforge.db:/app/purpleforge.db
+
+      # Les données ATT&CK et Sigma (~70 Mo) sont téléchargées une seule fois.
+      # Sans ce volume, elles seraient re-téléchargées à chaque recréation du conteneur.
+      - purpleforge_data:/app/data
+
+    restart: unless-stopped   # redémarre automatiquement si le conteneur plante
+
+# Volume nommé pour les données ATT&CK + Sigma.
+volumes:
+  purpleforge_data:
