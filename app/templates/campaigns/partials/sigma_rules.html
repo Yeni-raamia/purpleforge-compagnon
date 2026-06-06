@@ -1,39 +1,43 @@
-<!-- Fragment HTMX : règles Sigma pour une technique. -->
-<!-- Injecté dans #sigma-{tech_id} au clic sur "Voir les détections". -->
+<!-- Fragment HTMX : règles Sigma d'une technique.
+     Injecté dans #sigma-{tech_id} au clic sur "⚡ Règles Sigma". -->
 
 {% if rules %}
-<ul class="sigma-rule-list">
-  {% for rule in rules %}
-  <li class="sigma-rule">
-    <div class="sigma-rule__header">
-      <strong class="sigma-rule__title">{{ rule.title }}</strong>
-      {% if rule.level %}
-      <span class="sigma-level sigma-level--{{ rule.level }}">{{ rule.level }}</span>
-      {% endif %}
-    </div>
+{% for rule in rules %}
+<div class="sigma-rule-card">
 
-    {% if rule.description %}
-    <p class="sigma-rule__desc">{{ rule.description }}</p>
+  <div class="sigma-rule-card__header">
+    <span class="sigma-rule-card__title">{{ rule.title }}</span>
+    {% if rule.level %}
+    <span class="sigma-level sigma-level--{{ rule.level }}">{{ rule.level }}</span>
     {% endif %}
+  </div>
 
-    <div class="sigma-logs">
-      <span class="sigma-logs__label">Logs requis :</span>
-      <span class="sigma-logs__value">{{ rule.required_logs }}</span>
+  {% if rule.description %}
+  <p class="sigma-rule-card__desc">{{ rule.description[:200] }}{% if rule.description | length > 200 %}…{% endif %}</p>
+  {% endif %}
+
+  {% if rule.required_logs %}
+  <div class="sigma-logs">
+    <span class="sigma-log-badge">{{ rule.required_logs }}</span>
+  </div>
+  {% endif %}
+
+  <details>
+    <summary class="sigma-yaml-toggle">Voir la règle YAML</summary>
+    <div class="sigma-yaml">
+      <pre><code>{{ rule.yaml_content }}</code></pre>
     </div>
+  </details>
 
-    <!-- Règle YAML : affichée dans un bloc monospace repliable -->
-    <details class="sigma-yaml-details">
-      <summary>Voir la règle YAML</summary>
-      <pre class="sigma-yaml"><code>{{ rule.yaml_content }}</code></pre>
-    </details>
-  </li>
-  {% endfor %}
-</ul>
+</div>
+{% endfor %}
+
 {% else %}
-<p class="sigma-empty">
-  Aucune règle Sigma trouvée dans SigmaHQ pour
-  <strong>{{ technique.attack_id }}</strong>.
+<div class="empty-state" style="padding:1.25rem; font-size:0.85rem;">
+  <p>Aucune règle Sigma trouvée dans SigmaHQ pour cette technique.</p>
   <a href="https://github.com/SigmaHQ/sigma/tree/master/rules"
-     target="_blank" rel="noopener">Parcourir SigmaHQ →</a>
-</p>
+     target="_blank" rel="noopener" style="color: var(--vn-vif);">
+    Parcourir SigmaHQ →
+  </a>
+</div>
 {% endif %}

@@ -1,77 +1,74 @@
-<!-- Carte d'une technique (partielle HTMX).
-     Utilisée dans la page de détail ET retournée après mise à jour du statut.
-     La balise conteneur porte l'id "tech-{technique.id}" pour que HTMX puisse
-     remplacer précisément cette carte. -->
+<!-- Carte d'une technique — partielle HTMX.
+     id="tech-{technique.id}" : cible de remplacement HTMX. -->
 <div class="technique-card" id="tech-{{ technique.id }}">
 
-  <!-- En-tête : identifiant, nom, tactique, statut actuel -->
+  <!-- En-tête -->
   <div class="technique-card__header">
     <span class="attack-id">{{ technique.attack_id }}</span>
     <span class="technique-name">{{ technique.name }}</span>
-    <span class="tactic-badge">{{ technique.tactic }}</span>
+    <span class="tactic-tag">{{ technique.tactic | replace('-', ' ') }}</span>
 
     {% if technique.status.value == 'detecte' %}
-      <span class="status-badge status-badge--ok">✓ Détecté</span>
+      <span class="status-badge status-badge--detecte">✓ Détectée</span>
     {% elif technique.status.value == 'a_construire' %}
-      <span class="status-badge status-badge--warn">⚠ À construire</span>
+      <span class="status-badge status-badge--a_construire">⚠ À construire</span>
     {% else %}
-      <span class="status-badge status-badge--danger">✗ Non détecté</span>
+      <span class="status-badge status-badge--non_detecte">✗ Non détectée</span>
     {% endif %}
   </div>
 
-  <!-- Formulaire de mise à jour : statut + note blue team -->
-  <!-- hx-post : envoi HTMX ; hx-target : remplace toute cette carte -->
-  <form
-    class="update-form"
-    hx-post="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}"
-    hx-target="#tech-{{ technique.id }}"
-    hx-swap="outerHTML"
-  >
-    <div class="update-form__row">
-      <label class="form-label" for="status-{{ technique.id }}">Statut</label>
-      <select class="form-select" id="status-{{ technique.id }}" name="status">
-        <option value="non_detecte"
-          {% if technique.status.value == 'non_detecte' %}selected{% endif %}>
-          ✗ Non détecté
-        </option>
-        <option value="a_construire"
-          {% if technique.status.value == 'a_construire' %}selected{% endif %}>
-          ⚠ À construire
-        </option>
-        <option value="detecte"
-          {% if technique.status.value == 'detecte' %}selected{% endif %}>
-          ✓ Détecté
-        </option>
-      </select>
-    </div>
+  <!-- Corps : formulaire de mise à jour + bouton Sigma -->
+  <div class="technique-card__body">
 
-    <div class="update-form__row">
-      <label class="form-label" for="note-{{ technique.id }}">Note blue team</label>
-      <textarea
-        class="form-input form-textarea form-textarea--sm"
-        id="note-{{ technique.id }}"
-        name="blue_note"
-        placeholder="Règle créée, log activé, observation…"
-        rows="2"
-      >{{ technique.blue_note }}</textarea>
-    </div>
-
-    <button type="submit" class="btn btn--save">Sauvegarder</button>
-  </form>
-
-  <!-- Section des règles Sigma (chargée à la demande via HTMX) -->
-  <div class="sigma-section">
-    <button
-      class="btn btn--sigma"
-      hx-get="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}/sigma"
-      hx-target="#sigma-{{ technique.id }}"
-      hx-swap="innerHTML"
-      hx-indicator="#sigma-spinner-{{ technique.id }}"
+    <!-- Formulaire statut + note (HTMX : remplace toute la carte) -->
+    <form
+      class="update-form"
+      hx-post="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}"
+      hx-target="#tech-{{ technique.id }}"
+      hx-swap="outerHTML"
     >
-      🔍 Voir les détections Sigma
-    </button>
-    <span id="sigma-spinner-{{ technique.id }}" class="htmx-indicator sigma-spinner">⏳ Chargement…</span>
-    <div id="sigma-{{ technique.id }}" class="sigma-results"></div>
-  </div>
+      <div class="form-group">
+        <label for="status-{{ technique.id }}">Statut</label>
+        <select class="form-control" id="status-{{ technique.id }}" name="status">
+          <option value="non_detecte"  {% if technique.status.value == 'non_detecte'  %}selected{% endif %}>✗ Non détectée</option>
+          <option value="a_construire" {% if technique.status.value == 'a_construire' %}selected{% endif %}>⚠ À construire</option>
+          <option value="detecte"      {% if technique.status.value == 'detecte'      %}selected{% endif %}>✓ Détectée</option>
+        </select>
+      </div>
 
+      <div class="form-group">
+        <label for="note-{{ technique.id }}">Note blue team</label>
+        <textarea
+          class="form-control"
+          id="note-{{ technique.id }}"
+          name="blue_note"
+          placeholder="Règle déployée, ticket SIEM, observation…"
+          rows="2"
+        >{{ technique.blue_note }}</textarea>
+      </div>
+
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <button type="submit" class="btn btn--primary" style="font-size:0.85rem; padding:0.5rem 1rem;">
+          Sauvegarder
+        </button>
+        <span class="htmx-indicator"></span>
+      </div>
+    </form>
+
+    <!-- Section Sigma (HTMX : chargement à la demande) -->
+    <div class="sigma-zone" style="margin-top:0.9rem;">
+      <button
+        class="sigma-btn"
+        hx-get="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}/sigma"
+        hx-target="#sigma-{{ technique.id }}"
+        hx-swap="innerHTML"
+        hx-indicator="#sigma-spin-{{ technique.id }}"
+      >
+        ⚡ Règles Sigma
+      </button>
+      <span id="sigma-spin-{{ technique.id }}" class="htmx-indicator" style="margin-left:0.5rem;"></span>
+      <div id="sigma-{{ technique.id }}" class="sigma-rules-list" style="margin-top:0.75rem;"></div>
+    </div>
+
+  </div>
 </div>

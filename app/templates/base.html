@@ -2,36 +2,69 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <!-- Rend la page lisible sur téléphone comme sur ordinateur (responsive). -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}PurpleForge Compagnon{% endblock %}</title>
 
-  <!-- Notre feuille de style (la charte graphique violette). -->
+  <!-- Polices de la famille Outils Compagnon -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Charte graphique PurpleForge -->
   <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
 
-  <!-- HTMX : permet l'interactivité sans recharger la page. On l'utilisera dès la Phase 1. -->
+  <!-- HTMX : interactivité sans rechargement de page -->
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
 <body>
-  <!-- En-tête commun à toutes les pages. -->
+
+  <!-- ═══ NAVIGATION ════════════════════════════════════════════════════════ -->
   <header class="app-header">
     <div class="app-header__inner">
-      <span class="app-logo">PurpleForge<span class="app-logo__accent"> Compagnon</span></span>
-      <nav class="app-nav">
-        <a href="/">Accueil</a>
-        <a href="/campaigns/">Campagnes</a>
+
+      <!-- Logo avec mascotte -->
+      <a href="/" class="app-logo">
+        <span class="app-logo__mascot" aria-hidden="true"></span>
+        <span class="app-logo__text">
+          Purple<span class="app-logo__accent">Forge</span>
+          <small class="app-logo__suite">Compagnon</small>
+        </span>
+      </a>
+
+      <!-- Navigation principale -->
+      <nav class="app-nav" aria-label="Navigation principale">
+        <a href="/" class="app-nav__link">Accueil</a>
+        <a href="/campaigns/" class="app-nav__link app-nav__link--cta">
+          Campagnes
+        </a>
       </nav>
+
     </div>
   </header>
 
-  <!-- Contenu propre à chaque page : il se glisse ici. -->
+  <!-- ═══ CONTENU ═══════════════════════════════════════════════════════════ -->
   <main class="app-main">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Pied de page commun. -->
+  <!-- ═══ PIED DE PAGE ══════════════════════════════════════════════════════ -->
   <footer class="app-footer">
-    <p>PurpleForge Compagnon — outil open-source de purple teaming.</p>
+    <div class="app-footer__inner">
+
+      <div class="app-footer__brand">
+        <span class="app-footer__mascot" aria-hidden="true"></span>
+        <div class="app-footer__brand-text">
+          <strong>PurpleForge Compagnon</strong>
+          <span>Outil open-source de purple teaming &middot; Suite Outils Compagnon</span>
+        </div>
+      </div>
+
+      <div class="app-footer__credit">
+        Conçu &amp; développé par <strong>Yeni DOUKAKAS</strong>
+      </div>
+
+    </div>
   </footer>
+
 </body>
 </html>

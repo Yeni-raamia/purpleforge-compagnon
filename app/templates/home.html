@@ -1,26 +1,175 @@
 {% extends "base.html" %}
 
-{% block title %}Accueil — PurpleForge Compagnon{% endblock %}
+{% block title %}PurpleForge Compagnon — Purple Teaming ATT&CK{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <h1 class="hero__title">Bienvenue sur PurpleForge Compagnon</h1>
-  <p class="hero__subtitle">
-    L'outil qui relie la <span class="role role--red">red team</span>
-    et la <span class="role role--blue">blue team</span> :
-    d'une technique d'attaque jouée jusqu'à sa détection.
-  </p>
 
-  <div class="card">
-    <h2 class="card__title">La boucle de valeur</h2>
-    <ol class="value-loop">
-      <li>Une technique <strong>ATT&amp;CK</strong> est jouée par la red team.</li>
-      <li>PurpleForge suggère une <strong>détection Sigma</strong> et les logs nécessaires.</li>
-      <li>La blue team la teste, la déploie, met à jour le <strong>statut</strong>.</li>
-      <li>La <strong>carte de couverture</strong> se met à jour, partagée par tous.</li>
-    </ol>
+<!-- ═══ HERO ═══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero__content">
+    <p class="hero__eyebrow">Suite Outils Compagnon · Purple Teaming</p>
+    <h1 class="hero__title">
+      De l'attaque jouée<br>
+      à la détection <span class="hero__title--accent">déployée.</span>
+    </h1>
+    <p class="hero__subtitle">
+      PurpleForge connecte la <span class="tag tag--red">red team</span> et la
+      <span class="tag tag--blue">blue team</span> : chaque technique ATT&CK jouée
+      devient immédiatement une règle Sigma prête à déployer.
+    </p>
+    <div class="hero__actions">
+      <a href="/campaigns/" class="btn btn--hero">Démarrer une campagne →</a>
+      <a href="#scenario" class="btn btn--ghost">Voir comment ça marche ↓</a>
+    </div>
+  </div>
+  <div class="hero__visual" aria-hidden="true">
+    <div class="hero__mascot-wrap">
+      <span class="hero__mascot"></span>
+    </div>
+    <!-- Flux animé autour de la mascotte -->
+    <div class="hero__orbit">
+      <span class="orbit-pill orbit-pill--red">T1003 · LSASS Dump</span>
+      <span class="orbit-pill orbit-pill--sigma">Sigma Rule</span>
+      <span class="orbit-pill orbit-pill--green">Détecté ✓</span>
+      <span class="orbit-pill orbit-pill--blue">Coverage 85 %</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SCÉNARIO CONCRET ══════════════════════════════════════════════════ -->
+<section class="scenario" id="scenario">
+  <div class="scenario__intro">
+    <h2 class="scenario__title">Un scénario concret</h2>
+    <p class="scenario__lead">
+      Lundi matin. La red team vient d'exécuter
+      <strong>Mimikatz</strong> sur un poste Windows et a vidé
+      les credentials depuis LSASS. Attaque réelle, sans filet.
+      <em>Est-ce que la blue team peut le détecter ?</em>
+    </p>
   </div>
 
-  <p class="phase-badge">Phase 0 — Fondations en place. La suite arrive bientôt.</p>
+  <!-- Timeline des 5 étapes -->
+  <ol class="timeline">
+
+    <li class="timeline__step timeline__step--red">
+      <div class="timeline__badge">1</div>
+      <div class="timeline__body">
+        <h3>Red team enregistre la technique</h3>
+        <p>Dans PurpleForge → matrice ATT&CK →
+           tactique <strong>Credential Access</strong> →
+           clic sur <strong>+ Ajouter</strong> à côté de
+           <code>T1003.001 · LSASS Memory</code>.</p>
+        <p class="timeline__note timeline__note--red">
+          30 secondes. La technique est dans la campagne.
+        </p>
+      </div>
+    </li>
+
+    <li class="timeline__step timeline__step--purple">
+      <div class="timeline__badge">2</div>
+      <div class="timeline__body">
+        <h3>PurpleForge propose les règles Sigma</h3>
+        <p>Un clic sur <strong>Règles Sigma</strong> : l'outil
+           consulte l'index SigmaHQ (2 900+ règles) et remonte
+           instantanément les 8 plus pertinentes :</p>
+        <ul class="timeline__list">
+          <li><code>Mimikatz Use Detected</code> — niveau : <span class="lv lv--critical">critical</span></li>
+          <li><code>LSASS Memory Access via SeDebugPrivilege</code> — niveau : <span class="lv lv--high">high</span></li>
+          <li><code>Credential Dumping Tools — Service Installation</code> — niveau : <span class="lv lv--high">high</span></li>
+        </ul>
+        <p class="timeline__note timeline__note--purple">
+          Logs requis : Sysmon EventID 10 · Security EventID 4656.
+        </p>
+      </div>
+    </li>
+
+    <li class="timeline__step timeline__step--blue">
+      <div class="timeline__badge">3</div>
+      <div class="timeline__body">
+        <h3>Blue team déploie la règle dans le SIEM</h3>
+        <p>Elle copie le contenu YAML, l'adapte à son pipeline
+           (Splunk, Elastic, Sentinel…) et la déploie.
+           Elle note dans PurpleForge : <em>« Règle déployée —
+           ticket SIEM-2847 »</em>.</p>
+      </div>
+    </li>
+
+    <li class="timeline__step timeline__step--green">
+      <div class="timeline__badge">4</div>
+      <div class="timeline__body">
+        <h3>Statut mis à jour : Détecté ✓</h3>
+        <p>Le dropdown passe de <span class="status-pill status-pill--non_detecte">Non détectée</span>
+           à <span class="status-pill status-pill--detecte">Détectée</span>.
+           Toute l'équipe voit la progression en temps réel.</p>
+      </div>
+    </li>
+
+    <li class="timeline__step timeline__step--gold">
+      <div class="timeline__badge">5</div>
+      <div class="timeline__body">
+        <h3>Rapport de couverture &amp; export Navigator</h3>
+        <p>À la fin de l'exercice : la page <strong>Couverture</strong>
+           affiche la carte complète des techniques par tactique.
+           L'export ATT&CK Navigator génère un fichier JSON prêt
+           à partager avec le management.</p>
+        <div class="timeline__stats">
+          <span class="mini-stat mini-stat--green">12 Détectées</span>
+          <span class="mini-stat mini-stat--orange">4 À construire</span>
+          <span class="mini-stat mini-stat--red">2 Non détectées</span>
+        </div>
+      </div>
+    </li>
+
+  </ol>
 </section>
+
+<!-- ═══ VALEUR EN 4 CARTES ════════════════════════════════════════════════ -->
+<section class="value-cards">
+  <h2 class="value-cards__title">Pourquoi PurpleForge ?</h2>
+  <div class="value-grid">
+
+    <div class="value-card">
+      <span class="value-card__icon">🗺️</span>
+      <h3>Matrice ATT&CK interactive</h3>
+      <p>Toutes les techniques des 14 tactiques Enterprise.
+         Ajout en un clic, sans quitter l'outil.</p>
+    </div>
+
+    <div class="value-card">
+      <span class="value-card__icon">⚡</span>
+      <h3>Sigma instantané</h3>
+      <p>2 900+ règles SigmaHQ indexées.
+         Pour chaque technique jouée, les meilleures règles
+         s'affichent avec leurs logs requis et le YAML complet.</p>
+    </div>
+
+    <div class="value-card">
+      <span class="value-card__icon">📊</span>
+      <h3>Couverture visuelle</h3>
+      <p>Tableau de bord coloré vert / orange / rouge.
+         On voit d'un coup d'œil où sont les angles morts.</p>
+    </div>
+
+    <div class="value-card">
+      <span class="value-card__icon">📤</span>
+      <h3>Export Navigator</h3>
+      <p>Un fichier JSON compatible ATT&CK Navigator,
+         prêt à partager lors du debriefing ou avec le RSSI.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ CTA FINAL ═════════════════════════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="cta-section__inner">
+    <span class="cta-section__mascot" aria-hidden="true"></span>
+    <div>
+      <h2>Prêt à brancher la red et la blue ?</h2>
+      <p>Crée ta première campagne en moins de 30 secondes.</p>
+    </div>
+    <a href="/campaigns/" class="btn btn--hero">Créer une campagne →</a>
+  </div>
+</section>
+
 {% endblock %}

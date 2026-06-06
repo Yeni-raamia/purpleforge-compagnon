@@ -5,59 +5,74 @@
 {% block content %}
 <div class="page-header">
   <h1 class="page-title">Campagnes purple team</h1>
-  <p class="page-subtitle">Chaque campagne regroupe les techniques jouées et les détections associées.</p>
+  <p class="page-subtitle">Chaque campagne regroupe les techniques jouées lors d'un exercice et leurs détections associées.</p>
 </div>
 
-<!-- Formulaire de création d'une nouvelle campagne -->
-<div class="card">
-  <h2 class="card__title">Nouvelle campagne</h2>
-  <form method="post" action="/campaigns/" class="form">
-    <div class="form-group">
-      <label class="form-label" for="name">Nom de la campagne <span class="required">*</span></label>
-      <input
-        class="form-input"
-        type="text"
-        id="name"
-        name="name"
-        required
-        placeholder="Ex. : Red Team Juin 2025 — Credential Access"
-        maxlength="120"
-      >
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="description">Description (optionnelle)</label>
-      <textarea
-        class="form-input form-textarea"
-        id="description"
-        name="description"
-        placeholder="Contexte, périmètre, objectifs…"
-        rows="3"
-      ></textarea>
-    </div>
-    <button type="submit" class="btn btn--primary">Créer la campagne</button>
-  </form>
-</div>
+<div class="campaigns-layout">
 
-<!-- Liste des campagnes existantes -->
-{% if campaigns %}
-<section class="campaign-list">
-  <h2 class="section-title">Campagnes existantes ({{ campaigns | length }})</h2>
-  {% for c in campaigns %}
-  <a href="/campaigns/{{ c.id }}" class="campaign-card">
-    <div class="campaign-card__body">
-      <span class="campaign-card__name">{{ c.name }}</span>
-      {% if c.description %}
-      <span class="campaign-card__desc">{{ c.description }}</span>
-      {% endif %}
+  <!-- ─── Liste des campagnes ───────────────────────────────────────── -->
+  <section>
+    <h2 class="section-title">
+      Campagnes existantes
+      {% if campaigns %}<span class="count-badge">{{ campaigns | length }}</span>{% endif %}
+    </h2>
+
+    {% if campaigns %}
+    <div class="campaign-list">
+      {% for c in campaigns %}
+      <a href="/campaigns/{{ c.id }}" class="campaign-card">
+        <div>
+          <div class="campaign-card__name">{{ c.name }}</div>
+          <div class="campaign-card__meta">
+            {% if c.description %}{{ c.description[:80] }}{% if c.description | length > 80 %}…{% endif %} · {% endif %}
+            Créée le {{ c.created_at.strftime('%d %b %Y') }}
+          </div>
+        </div>
+        <span class="campaign-card__arrow">›</span>
+      </a>
+      {% endfor %}
     </div>
-    <span class="campaign-card__date">{{ c.created_at.strftime('%d %b %Y') }}</span>
-  </a>
-  {% endfor %}
-</section>
-{% else %}
-<div class="empty-state">
-  <p>Aucune campagne pour l'instant.</p>
-  <p>Crée la première avec le formulaire ci-dessus.</p>
+    {% else %}
+    <div class="empty-state">
+      <p>Aucune campagne pour l'instant.</p>
+      <p>Crée la première avec le formulaire →</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ─── Formulaire de création ───────────────────────────────────── -->
+  <aside>
+    <div class="new-campaign-form">
+      <h2 class="new-campaign-form__title">Nouvelle campagne</h2>
+      <form method="post" action="/campaigns/">
+        <div class="form-group">
+          <label for="name">Nom *</label>
+          <input
+            class="form-control"
+            type="text"
+            id="name"
+            name="name"
+            required
+            placeholder="Ex : Red Team Juin 2025"
+            maxlength="120"
+          >
+        </div>
+        <div class="form-group">
+          <label for="description">Description (optionnelle)</label>
+          <textarea
+            class="form-control"
+            id="description"
+            name="description"
+            placeholder="Contexte, périmètre, objectifs…"
+            rows="3"
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary" style="width:100%;">
+          Créer la campagne
+        </button>
+      </form>
+    </div>
+  </aside>
+
 </div>
-{% endif %}
 {% endblock %}
