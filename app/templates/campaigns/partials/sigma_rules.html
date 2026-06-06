@@ -1,10 +1,12 @@
 <!-- Fragment HTMX : règles Sigma d'une technique.
-     Injecté dans #sigma-{tech_id} au clic sur "⚡ Règles Sigma". -->
+     Injecté dans #sigma-{tech_id} au clic sur "⚡ Règles Sigma".
+     campaign_id et technique sont disponibles dans le contexte. -->
 
 {% if rules %}
 {% for rule in rules %}
 <div class="sigma-rule-card">
 
+  <!-- ─── En-tête : titre + niveau ─────────────────────────────── -->
   <div class="sigma-rule-card__header">
     <span class="sigma-rule-card__title">{{ rule.title }}</span>
     {% if rule.level %}
@@ -12,22 +14,43 @@
     {% endif %}
   </div>
 
+  <!-- ─── Description ───────────────────────────────────────────── -->
   {% if rule.description %}
-  <p class="sigma-rule-card__desc">{{ rule.description[:200] }}{% if rule.description | length > 200 %}…{% endif %}</p>
+  <p class="sigma-rule-card__desc">
+    {{ rule.description[:200] }}{% if rule.description | length > 200 %}…{% endif %}
+  </p>
   {% endif %}
 
+  <!-- ─── Logs requis ───────────────────────────────────────────── -->
   {% if rule.required_logs %}
   <div class="sigma-logs">
     <span class="sigma-log-badge">{{ rule.required_logs }}</span>
   </div>
   {% endif %}
 
-  <details>
-    <summary class="sigma-yaml-toggle">Voir la règle YAML</summary>
-    <div class="sigma-yaml">
-      <pre><code>{{ rule.yaml_content }}</code></pre>
-    </div>
-  </details>
+  <!-- ─── Actions : YAML + Export Wazuh ─────────────────────────── -->
+  <div class="sigma-rule-card__actions">
+
+    <!-- Contenu YAML repliable -->
+    <details>
+      <summary class="sigma-yaml-toggle">Voir la règle YAML</summary>
+      <div class="sigma-yaml">
+        <pre><code>{{ rule.yaml_content }}</code></pre>
+      </div>
+    </details>
+
+    <!-- Bouton export Wazuh XML (téléchargement direct) -->
+    <a
+      href="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}/wazuh?rule_idx={{ loop.index0 }}"
+      class="btn-wazuh"
+      download
+      title="Télécharger la règle convertie au format Wazuh XML"
+    >
+      <span class="btn-wazuh__icon">🛡️</span>
+      Export Wazuh XML
+    </a>
+
+  </div>
 
 </div>
 {% endfor %}
