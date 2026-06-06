@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Connexion — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+
+  <div class="auth-card">
+
+    <!-- Mascotte + titre -->
+    <div class="auth-card__header">
+      <span class="auth-card__mascot" aria-hidden="true"></span>
+      <h1 class="auth-card__title">PurpleForge<span class="auth-card__accent">Forge</span></h1>
+      <p class="auth-card__subtitle">Connecte-toi pour accéder à tes campagnes</p>
+    </div>
+
+    <!-- Message d'erreur -->
+    {% if error %}
+    <div class="auth-alert">
+      <span class="auth-alert__icon">⚠️</span>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Formulaire de connexion -->
+    <form method="post" action="/login" class="auth-form">
+
+      <div class="auth-form__group">
+        <label class="auth-form__label" for="username">Identifiant</label>
+        <input
+          class="auth-form__input"
+          type="text"
+          id="username"
+          name="username"
+          placeholder="ton-identifiant"
+          autocomplete="username"
+          autofocus
+          required
+        >
+      </div>
+
+      <div class="auth-form__group">
+        <label class="auth-form__label" for="password">Mot de passe</label>
+        <input
+          class="auth-form__input"
+          type="password"
+          id="password"
+          name="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <button type="submit" class="auth-form__btn">
+        Se connecter →
+      </button>
+
+    </form>
+
+    <!-- Pied de la carte -->
+    <p class="auth-card__footer">
+      Suite Outils Compagnon &middot; Purple Team
+    </p>
+
+  </div>
+
+</div>
+{% endblock %}

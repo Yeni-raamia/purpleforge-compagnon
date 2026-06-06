@@ -1,8 +1,9 @@
 """Routes liées aux techniques d'une campagne.
 
 Gère :
-- GET  /campaigns/{id}/techniques/{tech_id}/sigma → fragment HTMX : règles Sigma
-- POST /campaigns/{id}/techniques/{tech_id}       → fragment HTMX : carte mise à jour
+- GET  /campaigns/{id}/techniques/{tech_id}/sigma  → fragment HTMX : règles Sigma
+- GET  /campaigns/{id}/techniques/{tech_id}/wazuh  → téléchargement XML Wazuh
+- POST /campaigns/{id}/techniques/{tech_id}        → fragment HTMX : carte mise à jour
 """
 
 from fastapi import APIRouter, Depends, Form, Query, Request
@@ -12,7 +13,9 @@ from pathlib import Path
 from sqlmodel import Session, select
 
 from app.database import get_session
+from app.dependencies import require_user
 from app.models.technique import TechniqueEntry, TechniqueStatus
+from app.models.user import User
 from app.services.sigma import get_rules_for_technique
 from app.services.wazuh import sigma_yaml_to_wazuh_xml
 
@@ -28,12 +31,13 @@ def get_sigma_rules(
     tech_id: int,
     request: Request,
     session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
 ):
     """Retourne un fragment HTML avec les règles Sigma pour cette technique.
 
     Appelé par HTMX au clic sur « Voir les détections ».
     Premier appel : déclenche le téléchargement SigmaHQ (~30s).
-    Appels suivants : instantanés.
+    Appels suivants : instantanés (cache local).
     """
     technique = session.get(TechniqueEntry, tech_id)
     if not technique or technique.campaign_id != campaign_id:
@@ -54,6 +58,7 @@ def export_wazuh_rule(
     tech_id: int,
     rule_idx: int = Query(default=0, ge=0),
     session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
 ):
     """Convertit la règle Sigma n°rule_idx en XML Wazuh et la retourne en téléchargement.
 
@@ -76,7 +81,6 @@ def export_wazuh_rule(
     rule = rules[rule_idx]
     xml_content = sigma_yaml_to_wazuh_xml(rule["yaml_content"], technique.attack_id)
 
-    # Nom de fichier : wazuh_T1003_001_0.xml
     safe_id  = technique.attack_id.replace(".", "_").upper()
     filename = f"wazuh_{safe_id}_{rule_idx}.xml"
 
@@ -96,6 +100,7 @@ def update_technique(
     status: str = Form(...),
     blue_note: str = Form(""),
     session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
 ):
     """Met à jour le statut et la note blue team d'une technique.
 
@@ -105,18 +110,16 @@ def update_technique(
     if not technique or technique.campaign_id != campaign_id:
         return HTMLResponse("<p>Technique introuvable.</p>", status_code=404)
 
-    # Mise à jour des champs.
     try:
         technique.status = TechniqueStatus(status)
     except ValueError:
-        pass  # on garde l'ancien statut si la valeur est invalide
+        pass
     technique.blue_note = blue_note.strip()
 
     session.add(technique)
     session.commit()
     session.refresh(technique)
 
-    # On retourne la carte mise à jour (HTMX la substitue à l'ancienne).
     return templates.TemplateResponse(
         request,
         "campaigns/partials/technique_card.html",

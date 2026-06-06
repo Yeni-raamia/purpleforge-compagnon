@@ -1,12 +1,21 @@
-# Bibliothèques nécessaires pour la Phase 0 (page d'accueil).
-# On ajoutera mitreattack-python et pysigma aux Phases 1 et 2,
-# au moment où on s'en servira vraiment.
-
+# ─── Framework web ────────────────────────────────────────────────────────────
 fastapi            # le framework web (gère les pages et l'API)
+uvicorn            # le serveur qui fait tourner l'appli en local
+
+# ─── Base de données ──────────────────────────────────────────────────────────
+sqlmodel           # ORM : fait le lien entre Python et SQLite
+
+# ─── Templates & formulaires ──────────────────────────────────────────────────
+jinja2             # moteur de gabarits HTML
+python-multipart   # nécessaire pour lire les formulaires HTML
+
+# ─── Authentification (Phase 5) ───────────────────────────────────────────────
+bcrypt             # hachage sécurisé des mots de passe (utilisé directement)
+itsdangerous       # signature des cookies de session (requis par SessionMiddleware)
+
+# ─── Données & règles ─────────────────────────────────────────────────────────
 requests           # téléchargement des données ATT&CK et Sigma depuis GitHub
 pyyaml             # lecture des fichiers de règles Sigma (format YAML)
-uvicorn            # le serveur qui fait tourner l'appli en local
-sqlmodel           # ORM : fait le lien entre Python et la base de données
-jinja2             # le moteur de gabarits HTML (templates)
-python-multipart   # nécessaire pour lire les formulaires HTML
+
+# ─── Tests ────────────────────────────────────────────────────────────────────
 pytest             # pour écrire des tests simples

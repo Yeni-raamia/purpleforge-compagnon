@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Premier lancement — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+
+  <div class="auth-card auth-card--setup">
+
+    <!-- Mascotte + titre de bienvenue -->
+    <div class="auth-card__header">
+      <span class="auth-card__mascot" aria-hidden="true"></span>
+      <h1 class="auth-card__title">Bienvenue !</h1>
+      <p class="auth-card__subtitle">
+        C'est le premier lancement de PurpleForge.<br>
+        Crée ton compte administrateur pour démarrer.
+      </p>
+    </div>
+
+    <!-- Message d'erreur -->
+    {% if error %}
+    <div class="auth-alert">
+      <span class="auth-alert__icon">⚠️</span>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Formulaire de création du premier admin -->
+    <form method="post" action="/setup" class="auth-form">
+
+      <div class="auth-form__group">
+        <label class="auth-form__label" for="username">
+          Identifiant <span class="auth-form__hint">(min. 3 caractères, en minuscules)</span>
+        </label>
+        <input
+          class="auth-form__input"
+          type="text"
+          id="username"
+          name="username"
+          placeholder="ex : alice"
+          pattern="[a-z0-9_\-]+"
+          minlength="3"
+          autocomplete="username"
+          autofocus
+          required
+        >
+      </div>
+
+      <div class="auth-form__group">
+        <label class="auth-form__label" for="display_name">
+          Nom affiché <span class="auth-form__hint">(optionnel)</span>
+        </label>
+        <input
+          class="auth-form__input"
+          type="text"
+          id="display_name"
+          name="display_name"
+          placeholder="ex : Alice Dupont"
+          autocomplete="name"
+        >
+      </div>
+
+      <div class="auth-form__group">
+        <label class="auth-form__label" for="password">
+          Mot de passe <span class="auth-form__hint">(min. 8 caractères)</span>
+        </label>
+        <input
+          class="auth-form__input"
+          type="password"
+          id="password"
+          name="password"
+          placeholder="••••••••"
+          minlength="8"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="auth-form__group">
+        <label class="auth-form__label" for="password2">Confirmer le mot de passe</label>
+        <input
+          class="auth-form__input"
+          type="password"
+          id="password2"
+          name="password2"
+          placeholder="••••••••"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <button type="submit" class="auth-form__btn">
+        Créer mon compte et démarrer →
+      </button>
+
+    </form>
+
+    <p class="auth-card__footer">
+      Ce compte sera le seul administrateur au départ.<br>
+      Tu pourras en ajouter d'autres depuis le panneau Admin.
+    </p>
+
+  </div>
+
+</div>
+{% endblock %}

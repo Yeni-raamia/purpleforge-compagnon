@@ -90,7 +90,8 @@ code {
 .app-logo__mascot,
 .app-footer__mascot,
 .hero__mascot,
-.cta-section__mascot {
+.cta-section__mascot,
+.auth-card__mascot {
   display: inline-block;
   flex-shrink: 0;
   border-radius: 50%;
@@ -1569,4 +1570,419 @@ select.form-control { cursor: pointer; }
   .app-footer__brand { flex-direction: column; align-items: center; }
   .cta-section__inner { flex-direction: column; text-align: center; }
   .cta-section__inner .btn--hero { margin-left: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* AUTHENTIFICATION — pages login, setup                                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.auth-wrap {
+  min-height: calc(100vh - 64px - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  background: var(--vn-profond);
+  border: 1px solid rgba(123, 47, 190, .35);
+  border-radius: 1.25rem;
+  padding: 2.5rem 2.25rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.45);
+}
+
+.auth-card--setup { max-width: 480px; }
+
+/* En-tête de la carte */
+.auth-card__header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.auth-card__mascot {
+  display: block;
+  width: 72px;
+  height: 72px;
+  /* background-size/repeat/position/image héritées du groupe .app-logo__mascot etc. */
+  background-size: 82%;
+  margin: 0 auto 1rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+}
+
+.auth-card__title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--blanc);
+  margin: 0 0 .35rem;
+}
+
+.auth-card__accent { color: var(--vn-clair); }
+
+.auth-card__subtitle {
+  font-size: .9rem;
+  color: var(--gris);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Message d'erreur */
+.auth-alert {
+  background: rgba(220, 38, 38, .15);
+  border: 1px solid rgba(220, 38, 38, .4);
+  border-radius: .6rem;
+  padding: .75rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: .875rem;
+  color: #fca5a5;
+  display: flex;
+  gap: .5rem;
+  align-items: flex-start;
+}
+
+.auth-alert__icon { flex-shrink: 0; }
+
+/* Formulaire */
+.auth-form { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.auth-form__group { display: flex; flex-direction: column; gap: .35rem; }
+
+.auth-form__label {
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--vn-clair);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.auth-form__hint {
+  font-weight: 400;
+  color: var(--gris);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.auth-form__input {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(123,47,190,.4);
+  border-radius: .65rem;
+  padding: .7rem 1rem;
+  color: var(--blanc);
+  font-family: 'Nunito', sans-serif;
+  font-size: .95rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.auth-form__input::placeholder { color: rgba(255,255,255,.3); }
+
+.auth-form__input:focus {
+  outline: none;
+  border-color: var(--vn-vif);
+  box-shadow: 0 0 0 3px rgba(123,47,190,.25);
+}
+
+.auth-form__btn {
+  background: linear-gradient(135deg, var(--vn-vif), var(--vn-clair));
+  color: var(--blanc);
+  border: none;
+  border-radius: .7rem;
+  padding: .85rem 1.5rem;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: .5rem;
+  transition: opacity .2s, transform .15s;
+}
+
+.auth-form__btn:hover { opacity: .9; transform: translateY(-1px); }
+
+/* Pied de carte */
+.auth-card__footer {
+  text-align: center;
+  color: var(--gris);
+  font-size: .78rem;
+  margin: 1.5rem 0 0;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* NAVIGATION — zone utilisateur connecté                                     */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-nav__user {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-left: .75rem;
+  padding-left: .75rem;
+  border-left: 1px solid rgba(255,255,255,.12);
+}
+
+/* Initiale dans un cercle coloré */
+.app-nav__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--vn-vif), var(--vn-clair));
+  color: var(--blanc);
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .8rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-nav__username {
+  font-size: .82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.8);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-nav__link--admin {
+  font-size: .78rem;
+  color: var(--or) !important;
+  padding: .25rem .6rem;
+  border: 1px solid rgba(224, 162, 60, .35);
+  border-radius: .4rem;
+}
+
+.app-nav__logout-form { margin: 0; }
+
+.app-nav__logout {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: .45rem;
+  color: rgba(255,255,255,.65);
+  font-family: 'Nunito', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .28rem .7rem;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+
+.app-nav__logout:hover {
+  background: rgba(220, 38, 38, .2);
+  border-color: rgba(220, 38, 38, .4);
+  color: #fca5a5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ADMINISTRATION — gestion des utilisateurs                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.admin-alert {
+  background: rgba(220, 38, 38, .15);
+  border: 1px solid rgba(220, 38, 38, .4);
+  border-radius: .6rem;
+  padding: .75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: .875rem;
+  color: #fca5a5;
+  display: flex;
+  gap: .5rem;
+}
+
+.admin-section {
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--bordure);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.admin-section__title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--vn-clair);
+  margin: 0 0 1.25rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--bordure);
+}
+
+/* Table des utilisateurs */
+.admin-table-wrap { overflow-x: auto; }
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .87rem;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: .6rem .75rem;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--gris);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.admin-table td {
+  padding: .7rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  color: var(--blanc);
+  vertical-align: middle;
+}
+
+.admin-table__row:last-child td { border-bottom: none; }
+
+.admin-table__row--me td { background: rgba(123,47,190,.08); }
+
+.admin-table__username {
+  font-weight: 600;
+  color: var(--vn-clair);
+}
+
+.admin-table__date { color: var(--gris); font-size: .8rem; }
+
+.admin-table__actions { display: flex; gap: .4rem; align-items: center; }
+
+.admin-table__no-action { color: var(--gris); }
+
+/* Badges */
+.admin-badge {
+  display: inline-block;
+  padding: .15rem .55rem;
+  border-radius: .35rem;
+  font-size: .72rem;
+  font-weight: 700;
+  background: rgba(255,255,255,.08);
+  color: var(--gris);
+}
+
+.admin-badge--admin {
+  background: rgba(224, 162, 60, .15);
+  color: var(--or);
+  border: 1px solid rgba(224, 162, 60, .3);
+}
+
+.admin-badge--me {
+  background: rgba(123,47,190,.25);
+  color: var(--vn-clair);
+}
+
+/* Boutons d'action dans la table */
+.btn-admin-action {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: .4rem;
+  color: var(--blanc);
+  font-size: .75rem;
+  font-weight: 600;
+  padding: .25rem .6rem;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: background .2s;
+}
+
+.btn-admin-action--toggle:hover {
+  background: rgba(123,47,190,.3);
+  border-color: var(--vn-vif);
+}
+
+.btn-admin-action--delete {
+  color: #fca5a5;
+  border-color: rgba(220,38,38,.25);
+}
+
+.btn-admin-action--delete:hover {
+  background: rgba(220,38,38,.25);
+  border-color: rgba(220,38,38,.5);
+}
+
+/* Formulaire d'ajout */
+.admin-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.admin-form__group { display: flex; flex-direction: column; gap: .3rem; }
+
+.admin-form__label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--vn-clair);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.admin-form__input {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(123,47,190,.35);
+  border-radius: .55rem;
+  padding: .6rem .85rem;
+  color: var(--blanc);
+  font-family: 'Nunito', sans-serif;
+  font-size: .9rem;
+  transition: border-color .2s;
+}
+
+.admin-form__input::placeholder { color: rgba(255,255,255,.3); }
+
+.admin-form__input:focus {
+  outline: none;
+  border-color: var(--vn-vif);
+  box-shadow: 0 0 0 3px rgba(123,47,190,.2);
+}
+
+.admin-form__check {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .88rem;
+  color: var(--blanc);
+  cursor: pointer;
+}
+
+.admin-form__check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--vn-vif);
+}
+
+.admin-form__btn {
+  background: linear-gradient(135deg, var(--vn-vif), var(--vn-clair));
+  color: var(--blanc);
+  border: none;
+  border-radius: .6rem;
+  padding: .7rem 1.25rem;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s;
+  margin-top: .25rem;
+}
+
+.admin-form__btn:hover { opacity: .9; transform: translateY(-1px); }
+
+/* Responsive admin */
+@media (max-width: 860px) {
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-section--form { order: -1; }
+
+  .app-nav__username { display: none; }
+}
+
+@media (max-width: 600px) {
+  .auth-card { padding: 1.75rem 1.25rem 1.5rem; }
+  .app-nav__user { margin-left: .4rem; padding-left: .4rem; gap: .4rem; }
+  .app-nav__avatar { width: 26px; height: 26px; font-size: .72rem; }
 }

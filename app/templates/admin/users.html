@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Gestion des utilisateurs — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/campaigns/" class="btn-back">← Campagnes</a>
+      <h1 class="page-title">
+        <span class="page-title__icon">👥</span>
+        Gestion des utilisateurs
+      </h1>
+      <p class="page-subtitle">
+        {{ users | length }} membre{% if users | length > 1 %}s{% endif %} dans l'équipe
+      </p>
+    </div>
+  </div>
+
+  <!-- ─── Message d'erreur ─────────────────────────────────────────────── -->
+  {% if error %}
+  <div class="admin-alert">
+    <span>⚠️</span> {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="admin-layout">
+
+    <!-- ─── Liste des utilisateurs ───────────────────────────────────────── -->
+    <section class="admin-section">
+      <h2 class="admin-section__title">Membres actuels</h2>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Identifiant</th>
+              <th>Nom affiché</th>
+              <th>Rôle</th>
+              <th>Créé le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr class="admin-table__row{% if user.id == current_user.id %} admin-table__row--me{% endif %}">
+              <td>
+                <span class="admin-table__username">{{ user.username }}</span>
+                {% if user.id == current_user.id %}
+                <span class="admin-badge admin-badge--me">moi</span>
+                {% endif %}
+              </td>
+              <td>{{ user.display_name or "—" }}</td>
+              <td>
+                {% if user.is_admin %}
+                <span class="admin-badge admin-badge--admin">Admin</span>
+                {% else %}
+                <span class="admin-badge">Membre</span>
+                {% endif %}
+              </td>
+              <td class="admin-table__date">
+                {{ user.created_at.strftime("%d/%m/%Y") }}
+              </td>
+              <td class="admin-table__actions">
+                {% if user.id != current_user.id %}
+
+                <!-- Basculer rôle admin -->
+                <form method="post" action="/admin/users/{{ user.id }}/toggle-admin" style="display:inline">
+                  <button type="submit" class="btn-admin-action btn-admin-action--toggle"
+                    title="{{ 'Rétrograder' if user.is_admin else 'Promouvoir admin' }}">
+                    {{ '↓ Membre' if user.is_admin else '↑ Admin' }}
+                  </button>
+                </form>
+
+                <!-- Supprimer -->
+                <form method="post" action="/admin/users/{{ user.id }}/delete" style="display:inline"
+                  onsubmit="return confirm('Supprimer {{ user.username }} ? Cette action est irréversible.')">
+                  <button type="submit" class="btn-admin-action btn-admin-action--delete"
+                    title="Supprimer cet utilisateur">
+                    🗑
+                  </button>
+                </form>
+
+                {% else %}
+                <span class="admin-table__no-action">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── Formulaire d'ajout ────────────────────────────────────────────── -->
+    <section class="admin-section admin-section--form">
+      <h2 class="admin-section__title">Ajouter un membre</h2>
+
+      <form method="post" action="/admin/users" class="admin-form">
+
+        <div class="admin-form__group">
+          <label class="admin-form__label" for="new-username">Identifiant</label>
+          <input class="admin-form__input" type="text" id="new-username" name="username"
+            placeholder="ex : bob" minlength="3" required>
+        </div>
+
+        <div class="admin-form__group">
+          <label class="admin-form__label" for="new-display">Nom affiché</label>
+          <input class="admin-form__input" type="text" id="new-display" name="display_name"
+            placeholder="ex : Bob Martin">
+        </div>
+
+        <div class="admin-form__group">
+          <label class="admin-form__label" for="new-password">Mot de passe temporaire</label>
+          <input class="admin-form__input" type="password" id="new-password" name="password"
+            placeholder="min. 8 caractères" minlength="8" required>
+        </div>
+
+        <div class="admin-form__check">
+          <input type="checkbox" id="new-is-admin" name="is_admin" value="true">
+          <label for="new-is-admin">Administrateur</label>
+        </div>
+
+        <button type="submit" class="admin-form__btn">
+          Ajouter →
+        </button>
+
+      </form>
+    </section>
+
+  </div>
+
+</div>
+{% endblock %}

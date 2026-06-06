@@ -37,6 +37,29 @@
         <a href="/campaigns/" class="app-nav__link app-nav__link--cta">
           Campagnes
         </a>
+
+        <!-- Zone utilisateur connecté (affichée seulement si current_user est défini) -->
+        {% if current_user is defined and current_user %}
+        <div class="app-nav__user">
+          <span class="app-nav__avatar" aria-hidden="true">
+            {{ (current_user.display_name or current_user.username)[0] | upper }}
+          </span>
+          <span class="app-nav__username">
+            {{ current_user.display_name or current_user.username }}
+          </span>
+          {% if current_user.is_admin %}
+          <a href="/admin/users" class="app-nav__link app-nav__link--admin" title="Gérer les utilisateurs">
+            ⚙ Admin
+          </a>
+          {% endif %}
+          <form method="post" action="/logout" class="app-nav__logout-form">
+            <button type="submit" class="app-nav__logout" title="Se déconnecter">
+              Déconnexion
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
       </nav>
 
     </div>
