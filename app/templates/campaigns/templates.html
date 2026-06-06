@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Templates APT — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/campaigns/" class="btn-back">← Toutes les campagnes</a>
+      <h1 class="page-title">Templates d'attaquants</h1>
+      <p class="page-subtitle">
+        Crée une campagne pré-remplie depuis un profil d'attaquant connu.
+        Toutes les techniques sont ajoutées avec le statut <em>Non détecté</em> — à toi de jouer.
+      </p>
+    </div>
+  </div>
+
+  <!-- ─── Grille des profils ──────────────────────────────────────────────── -->
+  <div class="tpl-grid">
+
+    {% for apt in apt_templates %}
+    <div class="tpl-card">
+
+      <!-- En-tête de la carte -->
+      <div class="tpl-card__header">
+        <div class="tpl-card__flag tpl-card__flag--{{ apt.flag | lower }}">
+          {{ apt.flag }}
+        </div>
+        <div class="tpl-card__titles">
+          <div class="tpl-card__name">{{ apt.name }}</div>
+          <div class="tpl-card__aliases">{{ apt.aliases | join(' · ') }}</div>
+        </div>
+        <div class="tpl-card__count">
+          <span class="tpl-card__count-nb">{{ apt.techniques | length }}</span>
+          <span class="tpl-card__count-lbl">techniques</span>
+        </div>
+      </div>
+
+      <!-- Motivations -->
+      <div class="tpl-card__motives">
+        {% for m in apt.motivation %}
+        <span class="tpl-motive tpl-motive--{{ m | lower | replace(' ', '-') }}">{{ m }}</span>
+        {% endfor %}
+        <span class="tpl-origin">{{ apt.origin }}</span>
+      </div>
+
+      <!-- Description -->
+      <p class="tpl-card__desc">{{ apt.description }}</p>
+
+      <!-- Liste des techniques (dépliable) -->
+      <details class="tpl-details">
+        <summary class="tpl-details__summary">
+          Voir les {{ apt.techniques | length }} techniques →
+        </summary>
+        <div class="tpl-tech-list">
+          {% set current_tactic = namespace(value='') %}
+          {% for t in apt.techniques %}
+          {% if t.tactic != current_tactic.value %}
+          {% set current_tactic.value = t.tactic %}
+          <div class="tpl-tactic-sep">{{ t.tactic | replace('-', ' ') | title }}</div>
+          {% endif %}
+          <div class="tpl-tech-row">
+            <span class="tpl-tech-id">{{ t.attack_id }}</span>
+            <span class="tpl-tech-name">{{ t.name }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </details>
+
+      <!-- Formulaire de création -->
+      <form method="post" action="/campaigns/from-template/{{ apt.slug }}"
+            class="tpl-card__form">
+        <input
+          type="text"
+          name="campaign_name"
+          class="form-control tpl-card__name-input"
+          placeholder="Nom de la campagne (optionnel)"
+          value="Simulation {{ apt.name }}"
+        >
+        <button type="submit" class="btn btn--primary tpl-card__btn">
+          Créer la campagne →
+        </button>
+      </form>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+{% endblock %}

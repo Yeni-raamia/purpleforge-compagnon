@@ -21,6 +21,7 @@ from app.dependencies import require_user
 from app.models.campaign import Campaign
 from app.models.technique import TechniqueEntry, TechniqueStatus
 from app.models.user import User
+from app.data.apt_templates import APT_TEMPLATES, APT_BY_SLUG
 from app.services.attack import get_matrix
 from app.services.coverage import compute_coverage, TACTIC_DISPLAY_NAMES, TACTIC_ORDER
 
@@ -85,6 +86,64 @@ def create_campaign(
     session.add(campaign)
     session.commit()
     return RedirectResponse(url="/campaigns/", status_code=303)
+
+
+@router.get("/templates", response_class=HTMLResponse)
+def list_templates(
+    request: Request,
+    current_user: User = Depends(require_user),
+):
+    """Page des templates APT : grille de profils d'attaquants connus."""
+    return templates.TemplateResponse(
+        request,
+        "campaigns/templates.html",
+        {"apt_templates": APT_TEMPLATES, "current_user": current_user},
+    )
+
+
+@router.post("/from-template/{slug}", response_class=HTMLResponse)
+def create_from_template(
+    slug: str,
+    request: Request,
+    campaign_name: str = Form(""),
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Crée une nouvelle campagne pré-remplie depuis un profil APT."""
+    profile = APT_BY_SLUG.get(slug)
+    if not profile:
+        return RedirectResponse(url="/campaigns/templates", status_code=303)
+
+    name = campaign_name.strip() or f"Simulation {profile['name']}"
+    tags = ", ".join([profile["name"]] + profile["aliases"][:2])
+
+    campaign = Campaign(
+        name=name,
+        description=(
+            f"Campagne générée depuis le profil {profile['name']} "
+            f"({', '.join(profile['aliases'][:2])}). "
+            f"Origine : {profile['origin']}. "
+            f"Motivations : {', '.join(profile['motivation'])}."
+        ),
+        tags=_normalize_tags(tags),
+    )
+    session.add(campaign)
+    session.commit()
+    session.refresh(campaign)
+
+    # Ajout des techniques du profil, toutes en statut "non_detecte"
+    for t in profile["techniques"]:
+        session.add(TechniqueEntry(
+            campaign_id=campaign.id,
+            attack_id=t["attack_id"],
+            name=t["name"],
+            tactic=t["tactic"],
+            status=TechniqueStatus.non_detecte,
+            blue_note=None,
+        ))
+
+    session.commit()
+    return RedirectResponse(url=f"/campaigns/{campaign.id}", status_code=303)
 
 
 @router.get("/compare", response_class=HTMLResponse)
