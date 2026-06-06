@@ -595,6 +595,199 @@ body {
   display: inline-block;
 }
 
+/* =================== COUVERTURE =================== */
+
+/* Boutons d'action groupés sur la page de détail. */
+.campaign-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+/* Bloc résumé : total + 3 stats + barre. */
+.coverage-summary {
+  background: var(--blanc);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Grand chiffre total. */
+.coverage-total {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+.coverage-total__number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--violet);
+  line-height: 1;
+}
+.coverage-total__label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--texte-clair);
+  margin-top: 0.25rem;
+}
+
+/* Les 3 colonnes de stats. */
+.coverage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.coverage-stat {
+  text-align: center;
+  border-radius: var(--rayon);
+  padding: 0.75rem 0.5rem;
+}
+.coverage-stat--detecte     { background: #E8F5E9; }
+.coverage-stat--a_construire { background: #FFF3E0; }
+.coverage-stat--non_detecte  { background: #FFEBEE; }
+
+.coverage-stat__count {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.coverage-stat--detecte     .coverage-stat__count { color: #2e7d32; }
+.coverage-stat--a_construire .coverage-stat__count { color: #e65100; }
+.coverage-stat--non_detecte  .coverage-stat__count { color: #b71c1c; }
+
+.coverage-stat__pct {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+.coverage-stat__label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--texte-clair);
+  margin-top: 0.25rem;
+}
+
+/* Barre de progression empilée. */
+.coverage-bar {
+  height: 18px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--fond);
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+.coverage-bar__segment {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.coverage-bar__segment--detecte     { background: #2e7d32; }
+.coverage-bar__segment--a_construire { background: #e65100; }
+.coverage-bar__segment--non_detecte  { background: #b71c1c; }
+
+/* Légende de la barre. */
+.coverage-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--texte-clair);
+}
+.coverage-legend__item::before {
+  content: "●";
+  margin-right: 0.3rem;
+}
+.coverage-legend__item--detecte::before     { color: #2e7d32; }
+.coverage-legend__item--a_construire::before { color: #e65100; }
+.coverage-legend__item--non_detecte::before  { color: #b71c1c; }
+
+/* Boutons export/matrix. */
+.coverage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Section par tactique. */
+.coverage-tactics { margin-top: 1rem; }
+
+.coverage-tactic {
+  margin-bottom: 1.75rem;
+}
+
+.coverage-tactic__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+.coverage-tactic__name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--violet-fonce);
+}
+.coverage-tactic__count {
+  font-size: 0.8rem;
+  color: var(--texte-clair);
+}
+
+/* Grille de tuiles techniques. */
+.coverage-tactic__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Tuile d'une technique (petite, colorée). */
+.coverage-tile {
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 5px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.coverage-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+.coverage-tile--detecte {
+  background: #E8F5E9;
+  border-color: #A5D6A7;
+  color: #1b5e20;
+}
+.coverage-tile--a_construire {
+  background: #FFF3E0;
+  border-color: #FFCC80;
+  color: #bf360c;
+}
+.coverage-tile--non_detecte {
+  background: #FFEBEE;
+  border-color: #EF9A9A;
+  color: #7f0000;
+}
+.coverage-tile__id {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: monospace;
+  opacity: 0.8;
+}
+.coverage-tile__name {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 /* ------------------- Responsive (petits écrans) ------------------- */
 @media (max-width: 600px) {
   .hero__title {
@@ -602,5 +795,11 @@ body {
   }
   .app-main {
     padding: 1.5rem 1rem;
+  }
+  .coverage-stats {
+    grid-template-columns: 1fr;
+  }
+  .coverage-tile {
+    width: 100px;
   }
 }

@@ -5,8 +5,10 @@ Ici on gère : lister les campagnes, en créer une nouvelle,
 et afficher le détail d'une campagne.
 """
 
+import json
+
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from sqlmodel import Session, select
@@ -15,6 +17,7 @@ from app.database import get_session
 from app.models.campaign import Campaign
 from app.models.technique import TechniqueEntry, TechniqueStatus
 from app.services.attack import get_matrix
+from app.services.coverage import compute_coverage
 
 # Le routeur regroupe toutes les routes de ce fichier.
 # On lui donne un préfixe : toutes les URLs commenceront par /campaigns.
@@ -157,3 +160,127 @@ def add_technique(
 
     # HTMX remplacera le formulaire « Ajouter » par ce badge.
     return HTMLResponse('<span class="status-badge status-badge--ok added-badge">✓ Ajoutée</span>')
+
+
+@router.get("/{campaign_id}/coverage", response_class=HTMLResponse)
+def campaign_coverage(
+    campaign_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    """Page de couverture : statistiques de détection et carte par tactique."""
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return templates.TemplateResponse(
+            request, "404.html", {"message": "Campagne introuvable."}, status_code=404
+        )
+
+    # Calcul des statistiques de couverture via le service dédié.
+    coverage = compute_coverage(campaign_id, session)
+
+    return templates.TemplateResponse(
+        request,
+        "campaigns/coverage.html",
+        {"campaign": campaign, "coverage": coverage},
+    )
+
+
+@router.get("/{campaign_id}/export")
+def campaign_export(
+    campaign_id: int,
+    session: Session = Depends(get_session),
+):
+    """Exporte la campagne au format ATT&CK Navigator layer (JSON téléchargeable).
+
+    Le fichier peut être importé directement sur https://mitre-attack.github.io/attack-navigator/
+    pour visualiser les techniques jouées avec leur statut de détection.
+    """
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return Response(status_code=404)
+
+    # Récupération de toutes les techniques de la campagne.
+    techniques = session.exec(
+        select(TechniqueEntry).where(TechniqueEntry.campaign_id == campaign_id)
+    ).all()
+
+    # Couleur par statut (hex sans #, convention Navigator).
+    COLOR_MAP = {
+        "detecte":       "#2e7d32",   # vert foncé
+        "a_construire":  "#e65100",   # orange foncé
+        "non_detecte":   "#b71c1c",   # rouge foncé
+    }
+
+    # Construction des techniques au format Navigator.
+    techniques_layer = []
+    for t in techniques:
+        # Les sous-techniques (T1003.001) restent telles quelles dans Navigator.
+        techniques_layer.append({
+            "techniqueID": t.attack_id,
+            "tactic":      t.tactic,
+            "color":       COLOR_MAP.get(t.status.value, "#ffffff"),
+            "comment":     t.blue_note or "",
+            "enabled":     True,
+            "score":       0,
+            "metadata":    [],
+        })
+
+    # Structure complète d'un layer ATT&CK Navigator v4.
+    layer = {
+        "name":        campaign.name,
+        "versions": {
+            "attack":    "14",
+            "navigator": "4.9",
+            "layer":     "4.5",
+        },
+        "domain":      "enterprise-attack",
+        "description": campaign.description or f"Campagne PurpleForge : {campaign.name}",
+        "filters": {
+            "platforms": [
+                "Windows", "Linux", "macOS",
+                "Network", "PRE", "Containers",
+                "Office 365", "SaaS", "Google Workspace",
+                "IaaS", "Azure AD",
+            ]
+        },
+        "sorting":      0,
+        "layout": {
+            "layout":               "side",
+            "aggregateFunction":    "average",
+            "showID":               True,
+            "showName":             True,
+            "showAggregateScores":  False,
+            "countUnscored":        False,
+        },
+        "hideDisabled": False,
+        "techniques":   techniques_layer,
+        "gradient": {
+            "colors": ["#ff6666ff", "#ffe766ff", "#8ec843ff"],
+            "minValue": 0,
+            "maxValue": 100,
+        },
+        "legendItems": [
+            {"label": "Détecté",       "color": "#2e7d32"},
+            {"label": "À construire",  "color": "#e65100"},
+            {"label": "Non détecté",   "color": "#b71c1c"},
+        ],
+        "metadata":  [],
+        "links":     [],
+        "showTacticRowBackground": False,
+        "tacticRowBackground":     "#dddddd",
+        "selectTechniquesAcrossTactics": True,
+        "selectSubtechniquesWithParent": False,
+    }
+
+    # Nom de fichier sûr (remplace espaces et accents par des tirets).
+    safe_name = "".join(
+        c if c.isalnum() or c in "-_" else "-"
+        for c in campaign.name.lower()
+    ).strip("-")
+    filename = f"purpleforge-{safe_name}-navigator.json"
+
+    return Response(
+        content=json.dumps(layer, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

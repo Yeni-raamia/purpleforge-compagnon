@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Couverture — {{ campaign.name }} — PurpleForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <a href="/campaigns/{{ campaign.id }}" class="back-link">← {{ campaign.name }}</a>
+  <h1 class="page-title">Couverture de détection</h1>
+  <p class="page-subtitle">{{ campaign.name }}</p>
+</div>
+
+{% if coverage.total == 0 %}
+<!-- État vide : aucune technique dans la campagne -->
+<div class="empty-state">
+  <p>Aucune technique enregistrée dans cette campagne.</p>
+  <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
+    Ouvrir la matrice ATT&CK →
+  </a>
+</div>
+
+{% else %}
+<!-- ─── Bloc résumé global ─── -->
+<section class="coverage-summary">
+  <div class="coverage-total">
+    <span class="coverage-total__number">{{ coverage.total }}</span>
+    <span class="coverage-total__label">technique{{ 's' if coverage.total > 1 else '' }}</span>
+  </div>
+
+  <!-- Trois jauges de statut -->
+  <div class="coverage-stats">
+
+    <div class="coverage-stat coverage-stat--detecte">
+      <span class="coverage-stat__count">{{ coverage.counts.detecte }}</span>
+      <span class="coverage-stat__pct">{{ coverage.percentages.detecte }}&thinsp;%</span>
+      <span class="coverage-stat__label">Détectées</span>
+    </div>
+
+    <div class="coverage-stat coverage-stat--a_construire">
+      <span class="coverage-stat__count">{{ coverage.counts.a_construire }}</span>
+      <span class="coverage-stat__pct">{{ coverage.percentages.a_construire }}&thinsp;%</span>
+      <span class="coverage-stat__label">À construire</span>
+    </div>
+
+    <div class="coverage-stat coverage-stat--non_detecte">
+      <span class="coverage-stat__count">{{ coverage.counts.non_detecte }}</span>
+      <span class="coverage-stat__pct">{{ coverage.percentages.non_detecte }}&thinsp;%</span>
+      <span class="coverage-stat__label">Non détectées</span>
+    </div>
+
+  </div>
+
+  <!-- Barre de progression empilée -->
+  <div class="coverage-bar" title="{{ coverage.percentages.detecte }}% détectées">
+    {% if coverage.percentages.detecte > 0 %}
+    <div class="coverage-bar__segment coverage-bar__segment--detecte"
+         style="width: {{ coverage.percentages.detecte }}%"
+         title="Détectées : {{ coverage.counts.detecte }}"></div>
+    {% endif %}
+    {% if coverage.percentages.a_construire > 0 %}
+    <div class="coverage-bar__segment coverage-bar__segment--a_construire"
+         style="width: {{ coverage.percentages.a_construire }}%"
+         title="À construire : {{ coverage.counts.a_construire }}"></div>
+    {% endif %}
+    {% if coverage.percentages.non_detecte > 0 %}
+    <div class="coverage-bar__segment coverage-bar__segment--non_detecte"
+         style="width: {{ coverage.percentages.non_detecte }}%"
+         title="Non détectées : {{ coverage.counts.non_detecte }}"></div>
+    {% endif %}
+  </div>
+
+  <!-- Légende de la barre -->
+  <div class="coverage-legend">
+    <span class="coverage-legend__item coverage-legend__item--detecte">Détectées</span>
+    <span class="coverage-legend__item coverage-legend__item--a_construire">À construire</span>
+    <span class="coverage-legend__item coverage-legend__item--non_detecte">Non détectées</span>
+  </div>
+</section>
+
+<!-- ─── Bouton export Navigator ─── -->
+<div class="coverage-actions">
+  <a href="/campaigns/{{ campaign.id }}/export"
+     class="btn btn--secondary"
+     download>
+    ⬇ Exporter ATT&CK Navigator (.json)
+  </a>
+  <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
+    Ouvrir la matrice →
+  </a>
+</div>
+
+<!-- ─── Détail par tactique ─── -->
+<section class="coverage-tactics">
+  <h2 class="section-title">Détail par tactique</h2>
+
+  {% for tactic in coverage.by_tactic %}
+  <div class="coverage-tactic">
+    <div class="coverage-tactic__header">
+      <h3 class="coverage-tactic__name">{{ tactic.name }}</h3>
+      <span class="coverage-tactic__count">{{ tactic.techniques | length }} technique{{ 's' if tactic.techniques | length > 1 else '' }}</span>
+    </div>
+
+    <div class="coverage-tactic__grid">
+      {% for t in tactic.techniques %}
+      <a href="/campaigns/{{ campaign.id }}#tech-{{ t.id }}"
+         class="coverage-tile coverage-tile--{{ t.status.value }}"
+         title="{{ t.attack_id }} — {{ t.name }} ({{ t.status.value | replace('_', ' ') }})">
+        <span class="coverage-tile__id">{{ t.attack_id }}</span>
+        <span class="coverage-tile__name">{{ t.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% endblock %}

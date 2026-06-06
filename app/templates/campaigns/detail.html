@@ -12,10 +12,16 @@
   <p class="page-meta">Créée le {{ campaign.created_at.strftime('%d %B %Y') }}</p>
 </div>
 
-<!-- Bouton d'accès à la matrice ATT&CK -->
-<div style="margin-bottom: 1.5rem;">
+<!-- Boutons d'action de la campagne -->
+<div class="campaign-actions">
   <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
     Ouvrir la matrice ATT&CK →
+  </a>
+  <a href="/campaigns/{{ campaign.id }}/coverage" class="btn btn--secondary">
+    Voir la couverture
+  </a>
+  <a href="/campaigns/{{ campaign.id }}/export" class="btn btn--secondary" download>
+    ⬇ Exporter Navigator
   </a>
 </div>
 
