@@ -23,6 +23,7 @@ from app.routes import campaigns  as campaigns_router
 from app.routes import techniques as techniques_router
 from app.routes import dashboard  as dashboard_router
 from app.routes import search     as search_router
+from app.routes import stats      as stats_router
 
 # ── Chemins ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent
@@ -81,6 +82,7 @@ app.include_router(search_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(campaigns_router.router)
 app.include_router(techniques_router.router)
+app.include_router(stats_router.router)
 
 
 # ── Gestionnaires d'exceptions d'authentification ─────────────────────────────
