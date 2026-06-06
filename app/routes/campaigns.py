@@ -560,6 +560,53 @@ def campaign_export(
     )
 
 
+@router.get("/{campaign_id}/remediation", response_class=HTMLResponse)
+def campaign_remediation(
+    campaign_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Board de suivi de remédiation : toutes les techniques À construire, en 3 colonnes."""
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return templates.TemplateResponse(
+            request, "404.html",
+            {"message": "Campagne introuvable.", "current_user": current_user},
+            status_code=404,
+        )
+
+    # Récupère uniquement les techniques "à construire"
+    a_construire = session.exec(
+        select(TechniqueEntry)
+        .where(
+            TechniqueEntry.campaign_id == campaign_id,
+            TechniqueEntry.status == TechniqueStatus.a_construire,
+        )
+        .order_by(TechniqueEntry.attack_id)
+    ).all()
+
+    # Groupement par statut de remédiation
+    board = {
+        "en_cours": [t for t in a_construire if t.remediation_status == "en_cours"],
+        "bloque":   [t for t in a_construire if t.remediation_status == "bloque"],
+        "termine":  [t for t in a_construire if t.remediation_status == "termine"],
+    }
+
+    from datetime import date as _date
+    return templates.TemplateResponse(
+        request,
+        "campaigns/remediation.html",
+        {
+            "campaign":    campaign,
+            "board":       board,
+            "total":       len(a_construire),
+            "today":       _date.today().isoformat(),
+            "current_user": current_user,
+        },
+    )
+
+
 @router.get("/{campaign_id}/export/json")
 def campaign_export_json(
     campaign_id: int,

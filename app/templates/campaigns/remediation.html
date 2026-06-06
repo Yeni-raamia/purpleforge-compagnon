@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Remédiation — {{ campaign.name }} — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/campaigns/{{ campaign.id }}" class="btn-back">← {{ campaign.name }}</a>
+      <h1 class="page-title">Suivi de remédiation</h1>
+      <p class="page-subtitle">
+        Techniques <em>À construire</em> — assignation, deadline et avancement.
+        Le sélecteur déplace la carte instantanément.
+      </p>
+    </div>
+    <div class="page-header__actions">
+      <a href="/campaigns/{{ campaign.id }}/coverage" class="btn btn--outline">
+        Voir la couverture
+      </a>
+    </div>
+  </div>
+
+  {% if total == 0 %}
+  <div class="empty-state" style="margin-top:2rem;">
+    <p>Aucune technique « À construire » — tout est détecté ou non détecté.</p>
+    <a href="/campaigns/{{ campaign.id }}" class="btn btn--primary" style="margin-top:1rem;">
+      ← Retour à la campagne
+    </a>
+  </div>
+
+  {% else %}
+
+  <!-- ─── KPIs ─────────────────────────────────────────────────────────────── -->
+  <div class="remed-summary-row">
+    <div class="remed-kpi remed-kpi--cours">
+      <div class="remed-kpi__nb">{{ board.en_cours | length }}</div>
+      <div class="remed-kpi__lbl">En cours</div>
+    </div>
+    <div class="remed-kpi remed-kpi--bloque">
+      <div class="remed-kpi__nb">{{ board.bloque | length }}</div>
+      <div class="remed-kpi__lbl">Bloqué</div>
+    </div>
+    <div class="remed-kpi remed-kpi--termine">
+      <div class="remed-kpi__nb">{{ board.termine | length }}</div>
+      <div class="remed-kpi__lbl">Terminé</div>
+    </div>
+    <div class="remed-kpi">
+      <div class="remed-kpi__nb">{{ total }}</div>
+      <div class="remed-kpi__lbl">Total à construire</div>
+    </div>
+  </div>
+
+  <!-- ─── Kanban ───────────────────────────────────────────────────────────── -->
+  <div class="remed-board">
+
+    {# ── Colonne En cours ── #}
+    <div class="remed-col">
+      <div class="remed-col__header remed-col__header--cours">
+        🔧 En cours <span class="remed-col__count">{{ board.en_cours | length }}</span>
+      </div>
+      {% if board.en_cours %}
+        {% for t in board.en_cours %}
+        <div class="remed-card">
+          <div class="remed-card__head">
+            <span class="remed-card__id">{{ t.attack_id }}</span>
+            <span class="remed-card__tactic">{{ t.tactic | replace('-', ' ') | title }}</span>
+          </div>
+          <div class="remed-card__name">{{ t.name }}</div>
+          {% if t.remediation_assignee or t.remediation_deadline %}
+          <div class="remed-card__meta">
+            {% if t.remediation_assignee %}
+            <span class="remed-card__badge remed-card__badge--user">👤 {{ t.remediation_assignee }}</span>
+            {% endif %}
+            {% if t.remediation_deadline %}
+            <span class="remed-card__badge {% if t.remediation_deadline < today %}remed-card__badge--overdue{% else %}remed-card__badge--date{% endif %}">
+              📅 {{ t.remediation_deadline }}{% if t.remediation_deadline < today %} ⚠{% endif %}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+          <form method="post"
+                action="/campaigns/{{ campaign.id }}/techniques/{{ t.id }}/remediation?board=1"
+                class="remed-card__move">
+            <input type="hidden" name="assignee" value="{{ t.remediation_assignee }}">
+            <input type="hidden" name="deadline" value="{{ t.remediation_deadline }}">
+            <select name="remed_status" class="remed-card__select"
+                    onchange="this.form.submit()">
+              <option value="en_cours" selected>🔧 En cours</option>
+              <option value="bloque">🚫 Bloqué</option>
+              <option value="termine">✓ Terminé</option>
+            </select>
+          </form>
+          <a href="/campaigns/{{ campaign.id }}#tech-{{ t.id }}" class="remed-card__link">
+            Voir &amp; éditer →
+          </a>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="remed-empty">Aucune technique</div>
+      {% endif %}
+    </div>
+
+    {# ── Colonne Bloqué ── #}
+    <div class="remed-col">
+      <div class="remed-col__header remed-col__header--bloque">
+        🚫 Bloqué <span class="remed-col__count">{{ board.bloque | length }}</span>
+      </div>
+      {% if board.bloque %}
+        {% for t in board.bloque %}
+        <div class="remed-card remed-card--bloque">
+          <div class="remed-card__head">
+            <span class="remed-card__id">{{ t.attack_id }}</span>
+            <span class="remed-card__tactic">{{ t.tactic | replace('-', ' ') | title }}</span>
+          </div>
+          <div class="remed-card__name">{{ t.name }}</div>
+          {% if t.remediation_assignee or t.remediation_deadline %}
+          <div class="remed-card__meta">
+            {% if t.remediation_assignee %}
+            <span class="remed-card__badge remed-card__badge--user">👤 {{ t.remediation_assignee }}</span>
+            {% endif %}
+            {% if t.remediation_deadline %}
+            <span class="remed-card__badge {% if t.remediation_deadline < today %}remed-card__badge--overdue{% else %}remed-card__badge--date{% endif %}">
+              📅 {{ t.remediation_deadline }}{% if t.remediation_deadline < today %} ⚠{% endif %}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+          <form method="post"
+                action="/campaigns/{{ campaign.id }}/techniques/{{ t.id }}/remediation?board=1"
+                class="remed-card__move">
+            <input type="hidden" name="assignee" value="{{ t.remediation_assignee }}">
+            <input type="hidden" name="deadline" value="{{ t.remediation_deadline }}">
+            <select name="remed_status" class="remed-card__select"
+                    onchange="this.form.submit()">
+              <option value="en_cours">🔧 En cours</option>
+              <option value="bloque" selected>🚫 Bloqué</option>
+              <option value="termine">✓ Terminé</option>
+            </select>
+          </form>
+          <a href="/campaigns/{{ campaign.id }}#tech-{{ t.id }}" class="remed-card__link">
+            Voir &amp; éditer →
+          </a>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="remed-empty">Aucune technique</div>
+      {% endif %}
+    </div>
+
+    {# ── Colonne Terminé ── #}
+    <div class="remed-col">
+      <div class="remed-col__header remed-col__header--termine">
+        ✓ Terminé <span class="remed-col__count">{{ board.termine | length }}</span>
+      </div>
+      {% if board.termine %}
+        {% for t in board.termine %}
+        <div class="remed-card remed-card--termine">
+          <div class="remed-card__head">
+            <span class="remed-card__id">{{ t.attack_id }}</span>
+            <span class="remed-card__tactic">{{ t.tactic | replace('-', ' ') | title }}</span>
+          </div>
+          <div class="remed-card__name">{{ t.name }}</div>
+          {% if t.remediation_assignee or t.remediation_deadline %}
+          <div class="remed-card__meta">
+            {% if t.remediation_assignee %}
+            <span class="remed-card__badge remed-card__badge--user">👤 {{ t.remediation_assignee }}</span>
+            {% endif %}
+            {% if t.remediation_deadline %}
+            <span class="remed-card__badge remed-card__badge--date">
+              📅 {{ t.remediation_deadline }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+          <form method="post"
+                action="/campaigns/{{ campaign.id }}/techniques/{{ t.id }}/remediation?board=1"
+                class="remed-card__move">
+            <input type="hidden" name="assignee" value="{{ t.remediation_assignee }}">
+            <input type="hidden" name="deadline" value="{{ t.remediation_deadline }}">
+            <select name="remed_status" class="remed-card__select"
+                    onchange="this.form.submit()">
+              <option value="en_cours">🔧 En cours</option>
+              <option value="bloque">🚫 Bloqué</option>
+              <option value="termine" selected>✓ Terminé</option>
+            </select>
+          </form>
+          <a href="/campaigns/{{ campaign.id }}#tech-{{ t.id }}" class="remed-card__link">
+            Voir &amp; éditer →
+          </a>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="remed-empty">Aucune technique</div>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

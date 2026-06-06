@@ -35,6 +35,20 @@ def _run_migrations() -> None:
         except sqlite3.OperationalError:
             pass   # colonne déjà présente
 
+        # Phase 13 — colonnes de remédiation sur TechniqueEntry
+        for col, default in [
+            ("remediation_assignee", "''"),
+            ("remediation_deadline", "''"),
+            ("remediation_status",   "'en_cours'"),
+        ]:
+            try:
+                conn.execute(
+                    f"ALTER TABLE techniqueentry ADD COLUMN {col} TEXT DEFAULT {default}"
+                )
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass   # colonne déjà présente
+
 
 def get_session():
     """Fournit une session de base de données à chaque requête."""

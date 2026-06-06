@@ -77,6 +77,49 @@
     </div>
     {% endif %}
 
+    <!-- Section Remédiation (visible uniquement pour "à construire") -->
+    {% if technique.status.value == 'a_construire' %}
+    <details class="remed-details"
+      {% if technique.remediation_assignee or technique.remediation_deadline %}open{% endif %}>
+      <summary class="remed-summary">⚙ Suivi de remédiation</summary>
+      <form
+        class="remed-form"
+        hx-post="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}/remediation"
+        hx-target="#remed-fb-{{ technique.id }}"
+        hx-swap="innerHTML"
+      >
+        <div class="remed-grid">
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:.8rem;">Responsable</label>
+            <input class="form-control" type="text" name="assignee"
+              placeholder="Nom / initiales"
+              value="{{ technique.remediation_assignee }}">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:.8rem;">Deadline</label>
+            <input class="form-control" type="date" name="deadline"
+              value="{{ technique.remediation_deadline }}">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:.8rem;">Avancement</label>
+            <select class="form-control" name="remed_status">
+              <option value="en_cours" {% if technique.remediation_status == 'en_cours' %}selected{% endif %}>🔧 En cours</option>
+              <option value="bloque"   {% if technique.remediation_status == 'bloque'   %}selected{% endif %}>🚫 Bloqué</option>
+              <option value="termine"  {% if technique.remediation_status == 'termine'  %}selected{% endif %}>✓ Terminé</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:.5rem; align-items:center; margin-top:.6rem;">
+          <button type="submit" class="btn btn--outline"
+            style="font-size:.82rem; padding:.4rem .9rem;">
+            Enregistrer
+          </button>
+          <span id="remed-fb-{{ technique.id }}"></span>
+        </div>
+      </form>
+    </details>
+    {% endif %}
+
     <!-- Section Sigma (HTMX : chargement à la demande) -->
     <div class="sigma-zone" style="margin-top:0.9rem;">
       <button

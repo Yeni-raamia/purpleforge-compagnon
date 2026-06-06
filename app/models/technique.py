@@ -51,3 +51,15 @@ class TechniqueEntry(SQLModel, table=True):
 
     # Date à laquelle la technique a été jouée.
     played_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # ── Suivi de remédiation (Phase 13) ─────────────────────────────────────
+    # Champ vide = pas de remédiation suivie. Visible uniquement pour 'a_construire'.
+
+    # Nom ou initiales du responsable de la remédiation.
+    remediation_assignee: str = Field(default="")
+
+    # Deadline en format ISO (YYYY-MM-DD), stockée en texte pour SQLite.
+    remediation_deadline: str = Field(default="")
+
+    # Statut de la remédiation : en_cours | bloque | termine
+    remediation_status: str = Field(default="en_cours")
