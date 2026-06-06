@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Matrice ATT&CK — {{ campaign.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <a href="/campaigns/{{ campaign.id }}" class="back-link">← {{ campaign.name }}</a>
+  <h1 class="page-title">Matrice ATT&CK</h1>
+  <p class="page-subtitle">
+    Clique sur <strong>Ajouter</strong> pour enregistrer une technique dans la campagne.
+    Elle apparaîtra sur la page de la campagne.
+  </p>
+</div>
+
+<!-- Barre de sélection des tactiques -->
+<nav class="tactic-tabs" aria-label="Tactiques ATT&CK">
+  {% for tac in matrix %}
+  <a
+    href="?tactic={{ tac.shortname }}"
+    class="tactic-tab {% if tac.shortname == active_tactic %}tactic-tab--active{% endif %}"
+  >{{ tac.name }}</a>
+  {% endfor %}
+</nav>
+
+<!-- Techniques de la tactique active -->
+{% for tac in matrix %}
+  {% if tac.shortname == active_tactic %}
+  <section class="matrix-section">
+    <h2 class="section-title">
+      {{ tac.name }}
+      <span class="count-badge">{{ tac.techniques | length }}</span>
+    </h2>
+
+    <div class="techniques-grid">
+      {% for t in tac.techniques %}
+      <div class="matrix-card {% if t.is_sub %}matrix-card--sub{% endif %}">
+
+        <div class="matrix-card__header">
+          <!-- Identifiant ATT&CK en monospace -->
+          <span class="attack-id {% if t.is_sub %}attack-id--sub{% endif %}">
+            {% if t.is_sub %}↳ {% endif %}{{ t.attack_id }}
+          </span>
+        </div>
+
+        <p class="matrix-card__name">{{ t.name }}</p>
+
+        <!-- Bouton Ajouter (HTMX) ou badge "Ajoutée" si déjà dans la campagne -->
+        {% if t.attack_id in existing_ids %}
+          <span class="status-badge status-badge--ok added-badge">✓ Ajoutée</span>
+        {% else %}
+          <!-- hx-post : envoie un POST à la route add_technique -->
+          <!-- hx-target="this" + hx-swap="outerHTML" : remplace le <form> par la réponse -->
+          <form
+            hx-post="/campaigns/{{ campaign.id }}/techniques"
+            hx-target="this"
+            hx-swap="outerHTML"
+            class="add-form"
+          >
+            <input type="hidden" name="attack_id" value="{{ t.attack_id }}">
+            <input type="hidden" name="name" value="{{ t.name }}">
+            <input type="hidden" name="tactic" value="{{ active_tactic }}">
+            <button type="submit" class="btn btn--add">+ Ajouter</button>
+          </form>
+        {% endif %}
+
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+{% endfor %}
+
+{% endblock %}

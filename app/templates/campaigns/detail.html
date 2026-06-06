@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ campaign.name }} — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <a href="/campaigns/" class="back-link">← Toutes les campagnes</a>
+  <h1 class="page-title">{{ campaign.name }}</h1>
+  {% if campaign.description %}
+  <p class="page-subtitle">{{ campaign.description }}</p>
+  {% endif %}
+  <p class="page-meta">Créée le {{ campaign.created_at.strftime('%d %B %Y') }}</p>
+</div>
+
+<!-- Bouton d'accès à la matrice ATT&CK -->
+<div style="margin-bottom: 1.5rem;">
+  <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
+    Ouvrir la matrice ATT&CK →
+  </a>
+</div>
+
+<!-- Techniques enregistrées -->
+<section>
+  <h2 class="section-title">
+    Techniques jouées
+    <span class="count-badge">{{ techniques | length }}</span>
+  </h2>
+
+  {% if techniques %}
+  <div class="technique-list">
+    {% for t in techniques %}
+    <div class="technique-card">
+      <div class="technique-card__header">
+        <span class="attack-id">{{ t.attack_id }}</span>
+        <span class="technique-name">{{ t.name }}</span>
+        <span class="tactic-badge">{{ t.tactic }}</span>
+        <!-- Statut : toujours accompagné du texte (accessibilité) -->
+        {% if t.status.value == 'detecte' %}
+          <span class="status-badge status-badge--ok">✓ Détecté</span>
+        {% elif t.status.value == 'a_construire' %}
+          <span class="status-badge status-badge--warn">⚠ À construire</span>
+        {% else %}
+          <span class="status-badge status-badge--danger">✗ Non détecté</span>
+        {% endif %}
+      </div>
+      {% if t.red_note or t.blue_note %}
+      <div class="technique-card__notes">
+        {% if t.red_note %}
+        <div class="note note--red"><strong>Red :</strong> {{ t.red_note }}</div>
+        {% endif %}
+        {% if t.blue_note %}
+        <div class="note note--blue"><strong>Blue :</strong> {{ t.blue_note }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>Aucune technique ajoutée à cette campagne.</p>
+    <p>La matrice ATT&CK (bientôt) te permettra d'en ajouter en un clic.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
