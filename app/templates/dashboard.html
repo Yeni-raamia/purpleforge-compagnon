@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-title">
+        <span class="page-title__icon">📊</span>
+        Tableau de bord
+      </h1>
+      <p class="page-subtitle">Vue d'ensemble de toutes les campagnes purple team</p>
+    </div>
+    <div class="page-header__actions">
+      <a href="/campaigns/" class="btn btn--outline">+ Nouvelle campagne</a>
+    </div>
+  </div>
+
+  <!-- ─── Compteurs globaux ─────────────────────────────────────────────── -->
+  <div class="db-kpi-grid">
+
+    <div class="db-kpi db-kpi--campaigns">
+      <span class="db-kpi__icon">🗂</span>
+      <div class="db-kpi__body">
+        <span class="db-kpi__value">{{ stats.nb_campaigns }}</span>
+        <span class="db-kpi__label">Campagne{% if stats.nb_campaigns > 1 %}s{% endif %}</span>
+      </div>
+    </div>
+
+    <div class="db-kpi db-kpi--techniques">
+      <span class="db-kpi__icon">⚔️</span>
+      <div class="db-kpi__body">
+        <span class="db-kpi__value">{{ stats.nb_techniques }}</span>
+        <span class="db-kpi__label">Technique{% if stats.nb_techniques > 1 %}s{% endif %} jouées</span>
+      </div>
+    </div>
+
+    <div class="db-kpi db-kpi--detecte">
+      <span class="db-kpi__icon">🛡️</span>
+      <div class="db-kpi__body">
+        <span class="db-kpi__value">{{ stats.global_counts.detecte }}</span>
+        <span class="db-kpi__label">Détectées</span>
+      </div>
+    </div>
+
+    <div class="db-kpi db-kpi--rate">
+      <span class="db-kpi__icon">📈</span>
+      <div class="db-kpi__body">
+        <span class="db-kpi__value">{{ stats.global_pct_detecte }}%</span>
+        <span class="db-kpi__label">Taux de détection global</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Barre globale ────────────────────────────────────────────────── -->
+  {% if stats.nb_techniques > 0 %}
+  <div class="db-global-bar">
+    <div class="db-global-bar__labels">
+      <span class="db-global-bar__label db-global-bar__label--detecte">
+        Détecté · {{ stats.global_counts.detecte }}
+      </span>
+      <span class="db-global-bar__label db-global-bar__label--construire">
+        À construire · {{ stats.global_counts.a_construire }}
+      </span>
+      <span class="db-global-bar__label db-global-bar__label--non">
+        Non détecté · {{ stats.global_counts.non_detecte }}
+      </span>
+    </div>
+    <div class="coverage-bar" style="height:12px; border-radius:6px; overflow:hidden; display:flex;">
+      {% set pct_d = (stats.global_counts.detecte / stats.nb_techniques * 100) | round | int %}
+      {% set pct_c = (stats.global_counts.a_construire / stats.nb_techniques * 100) | round | int %}
+      {% set pct_n = (stats.global_counts.non_detecte / stats.nb_techniques * 100) | round | int %}
+      <div style="width:{{ pct_d }}%; background:var(--s-detecte);"></div>
+      <div style="width:{{ pct_c }}%; background:var(--s-construire);"></div>
+      <div style="width:{{ pct_n }}%; background:var(--s-non);"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="db-layout">
+
+    <!-- ─── Campagnes ──────────────────────────────────────────────────── -->
+    <section class="db-section db-section--campaigns">
+      <h2 class="db-section__title">Campagnes</h2>
+
+      {% if stats.campaigns %}
+      <div class="db-campaigns">
+        {% for item in stats.campaigns %}
+        <a href="/campaigns/{{ item.campaign.id }}" class="db-campaign-card">
+
+          <div class="db-campaign-card__header">
+            <span class="db-campaign-card__name">{{ item.campaign.name }}</span>
+            <span class="db-campaign-card__count">{{ item.total }} technique{% if item.total > 1 %}s{% endif %}</span>
+          </div>
+
+          {% if item.campaign.description %}
+          <p class="db-campaign-card__desc">
+            {{ item.campaign.description[:80] }}{% if item.campaign.description | length > 80 %}…{% endif %}
+          </p>
+          {% endif %}
+
+          <!-- Mini-barre de progression -->
+          {% if item.total > 0 %}
+          <div class="db-campaign-card__bar">
+            {% set pd = (item.counts.detecte / item.total * 100) | round | int %}
+            {% set pc = (item.counts.a_construire / item.total * 100) | round | int %}
+            {% set pn = (item.counts.non_detecte / item.total * 100) | round | int %}
+            <div style="width:{{ pd }}%; background:var(--s-detecte);"></div>
+            <div style="width:{{ pc }}%; background:var(--s-construire);"></div>
+            <div style="width:{{ pn }}%; background:var(--s-non);"></div>
+          </div>
+          <div class="db-campaign-card__stats">
+            <span class="db-campaign-card__pct" style="color:var(--s-detecte)">
+              {{ item.pct_detecte }}% détecté
+            </span>
+            <div class="db-campaign-card__badges">
+              <span class="db-mini-badge db-mini-badge--detecte">✓ {{ item.counts.detecte }}</span>
+              <span class="db-mini-badge db-mini-badge--construire">⚙ {{ item.counts.a_construire }}</span>
+              <span class="db-mini-badge db-mini-badge--non">✗ {{ item.counts.non_detecte }}</span>
+            </div>
+          </div>
+          {% else %}
+          <p class="db-campaign-card__empty">Aucune technique ajoutée</p>
+          {% endif %}
+
+          <div class="db-campaign-card__links">
+            <span class="db-campaign-card__link">Détail →</span>
+            <span class="db-campaign-card__date">{{ item.campaign.created_at.strftime("%d/%m/%Y") }}</span>
+          </div>
+
+        </a>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="empty-state" style="padding:2rem; text-align:center;">
+        <p style="color:var(--gris); margin-bottom:1rem;">Aucune campagne pour l'instant.</p>
+        <a href="/campaigns/" class="btn btn--primary">Créer la première campagne →</a>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- ─── Panneau latéral ─────────────────────────────────────────────── -->
+    <aside class="db-aside">
+
+      <!-- Top tactiques -->
+      {% if stats.top_tactics %}
+      <div class="db-widget">
+        <h3 class="db-widget__title">🎯 Tactiques les plus jouées</h3>
+        <ul class="db-tactic-list">
+          {% set max_count = stats.top_tactics[0].count %}
+          {% for t in stats.top_tactics %}
+          <li class="db-tactic-item">
+            <span class="db-tactic-item__name">{{ t.name }}</span>
+            <div class="db-tactic-item__bar-wrap">
+              <div class="db-tactic-item__bar"
+                style="width: {{ (t.count / max_count * 100) | round | int }}%">
+              </div>
+            </div>
+            <span class="db-tactic-item__count">{{ t.count }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- Répartition globale -->
+      {% if stats.nb_techniques > 0 %}
+      <div class="db-widget">
+        <h3 class="db-widget__title">📊 Répartition globale</h3>
+        <ul class="db-legend">
+          <li class="db-legend__item">
+            <span class="db-legend__dot" style="background:var(--s-detecte)"></span>
+            <span>Détecté</span>
+            <strong>{{ stats.global_counts.detecte }}</strong>
+          </li>
+          <li class="db-legend__item">
+            <span class="db-legend__dot" style="background:var(--s-construire)"></span>
+            <span>À construire</span>
+            <strong>{{ stats.global_counts.a_construire }}</strong>
+          </li>
+          <li class="db-legend__item">
+            <span class="db-legend__dot" style="background:var(--s-non)"></span>
+            <span>Non détecté</span>
+            <strong>{{ stats.global_counts.non_detecte }}</strong>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- Actions rapides -->
+      <div class="db-widget">
+        <h3 class="db-widget__title">⚡ Actions rapides</h3>
+        <div class="db-quick-actions">
+          <a href="/campaigns/" class="db-quick-btn">
+            <span>🗂</span> Toutes les campagnes
+          </a>
+          {% if current_user.is_admin %}
+          <a href="/admin/users" class="db-quick-btn">
+            <span>👥</span> Gérer les utilisateurs
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+</div>
+{% endblock %}

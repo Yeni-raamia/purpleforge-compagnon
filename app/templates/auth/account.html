@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Mon compte — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/dashboard" class="btn-back">← Dashboard</a>
+      <h1 class="page-title">
+        <span class="page-title__icon">👤</span>
+        Mon compte
+      </h1>
+    </div>
+  </div>
+
+  <div class="account-layout">
+
+    <!-- ─── Infos du compte ─────────────────────────────────────────────── -->
+    <div class="account-card">
+      <h2 class="account-card__title">Informations</h2>
+
+      <div class="account-info">
+        <div class="account-info__avatar">
+          {{ (current_user.display_name or current_user.username)[0] | upper }}
+        </div>
+        <div class="account-info__details">
+          <p class="account-info__name">{{ current_user.display_name or current_user.username }}</p>
+          <p class="account-info__username">@{{ current_user.username }}</p>
+          <div class="account-info__badges">
+            {% if current_user.is_admin %}
+            <span class="admin-badge admin-badge--admin">⚙ Administrateur</span>
+            {% else %}
+            <span class="admin-badge">Membre</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Changement de mot de passe ──────────────────────────────────── -->
+    <div class="account-card">
+      <h2 class="account-card__title">Changer le mot de passe</h2>
+
+      <!-- Message succès -->
+      {% if success %}
+      <div class="auth-alert" style="background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); color:#4ade80; margin-bottom:1.25rem;">
+        <span>✓</span> {{ success }}
+      </div>
+      {% endif %}
+
+      <!-- Message erreur -->
+      {% if error %}
+      <div class="auth-alert" style="margin-bottom:1.25rem;">
+        <span class="auth-alert__icon">⚠️</span> {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" action="/account/password" class="auth-form" id="account-form">
+
+        <div class="auth-form__group">
+          <label class="auth-form__label" for="current_password">Mot de passe actuel</label>
+          <input class="auth-form__input" type="password" id="current_password"
+            name="current_password" placeholder="••••••••••••" required>
+        </div>
+
+        <div class="auth-form__group">
+          <label class="auth-form__label" for="new_password">Nouveau mot de passe</label>
+          <input class="auth-form__input" type="password" id="new_password"
+            name="new_password" placeholder="••••••••••••" required>
+
+          <!-- Jauge de force -->
+          <div class="pwd-strength" id="pwd-strength">
+            <div class="pwd-strength__bar">
+              <div class="pwd-strength__fill" id="pwd-fill"></div>
+            </div>
+            <span class="pwd-strength__label" id="pwd-label"></span>
+          </div>
+
+          <!-- Critères -->
+          <ul class="pwd-rules" id="pwd-rules">
+            <li class="pwd-rule" id="rule-len">  12 caractères minimum</li>
+            <li class="pwd-rule" id="rule-upper">Une majuscule (A–Z)</li>
+            <li class="pwd-rule" id="rule-lower">Une minuscule (a–z)</li>
+            <li class="pwd-rule" id="rule-digit">Un chiffre (0–9)</li>
+            <li class="pwd-rule" id="rule-spec"> Un caractère spécial (!@#$%…)</li>
+          </ul>
+        </div>
+
+        <div class="auth-form__group">
+          <label class="auth-form__label" for="new_password2">Confirmer le nouveau mot de passe</label>
+          <input class="auth-form__input" type="password" id="new_password2"
+            name="new_password2" placeholder="••••••••••••" required>
+          <span class="pwd-match" id="pwd-match"></span>
+        </div>
+
+        <button type="submit" class="auth-form__btn" id="submit-btn">
+          Changer le mot de passe →
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Réutilise le même JS que setup.html -->
+<script>
+(function () {
+  const pwdInput  = document.getElementById('new_password');
+  const pwd2Input = document.getElementById('new_password2');
+  const fill      = document.getElementById('pwd-fill');
+  const label     = document.getElementById('pwd-label');
+  const matchEl   = document.getElementById('pwd-match');
+  const submitBtn = document.getElementById('submit-btn');
+
+  const rules = {
+    'rule-len':   p => p.length >= 12,
+    'rule-upper': p => /[A-Z]/.test(p),
+    'rule-lower': p => /[a-z]/.test(p),
+    'rule-digit': p => /\d/.test(p),
+    'rule-spec':  p => /[^A-Za-z0-9]/.test(p),
+  };
+
+  const levels = [
+    { label: '',            color: 'transparent', width: '0%'   },
+    { label: 'Très faible', color: '#dc2626',     width: '20%'  },
+    { label: 'Faible',      color: '#ea580c',     width: '40%'  },
+    { label: 'Moyen',       color: '#ca8a04',     width: '60%'  },
+    { label: 'Fort',        color: '#16a34a',     width: '80%'  },
+    { label: 'Très fort',   color: '#059669',     width: '100%' },
+  ];
+
+  function checkPassword() {
+    const pwd = pwdInput.value;
+    let score = 0;
+    for (const [id, test] of Object.entries(rules)) {
+      const el = document.getElementById(id);
+      const ok = test(pwd);
+      el.classList.toggle('pwd-rule--ok', ok);
+      el.classList.toggle('pwd-rule--ko', pwd.length > 0 && !ok);
+      if (ok) score++;
+    }
+    const lvl = pwd.length === 0 ? 0 : Math.max(1, score);
+    fill.style.width           = levels[lvl].width;
+    fill.style.backgroundColor = levels[lvl].color;
+    label.textContent          = levels[lvl].label;
+    label.style.color          = levels[lvl].color;
+    checkMatch();
+    submitBtn.disabled = pwd.length > 0 && score < 5;
+  }
+
+  function checkMatch() {
+    const pwd  = pwdInput.value;
+    const pwd2 = pwd2Input.value;
+    if (!pwd2) { matchEl.textContent = ''; return; }
+    if (pwd === pwd2) {
+      matchEl.textContent = '✓ Les mots de passe correspondent';
+      matchEl.className   = 'pwd-match pwd-match--ok';
+    } else {
+      matchEl.textContent = '✗ Les mots de passe ne correspondent pas';
+      matchEl.className   = 'pwd-match pwd-match--ko';
+    }
+  }
+
+  pwdInput.addEventListener('input', checkPassword);
+  pwd2Input.addEventListener('input', checkMatch);
+})();
+</script>
+{% endblock %}

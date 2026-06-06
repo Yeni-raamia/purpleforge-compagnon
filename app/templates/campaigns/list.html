@@ -21,12 +21,21 @@
     <div class="campaign-list">
       {% for c in campaigns %}
       <a href="/campaigns/{{ c.id }}" class="campaign-card">
-        <div>
+        <div style="flex:1;">
           <div class="campaign-card__name">{{ c.name }}</div>
           <div class="campaign-card__meta">
             {% if c.description %}{{ c.description[:80] }}{% if c.description | length > 80 %}…{% endif %} · {% endif %}
             Créée le {{ c.created_at.strftime('%d %b %Y') }}
           </div>
+          <!-- Tags APT -->
+          {% if c.tags %}
+          <div class="apt-tags apt-tags--sm" style="margin-top:.35rem;">
+            {% for tag in c.tags.split(',') %}
+            {% set t = tag.strip() %}
+            {% if t %}<span class="apt-tag apt-tag--sm">{{ t }}</span>{% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
         <span class="campaign-card__arrow">›</span>
       </a>
@@ -45,28 +54,39 @@
     <div class="new-campaign-form">
       <h2 class="new-campaign-form__title">Nouvelle campagne</h2>
       <form method="post" action="/campaigns/">
+
         <div class="form-group">
           <label for="name">Nom *</label>
-          <input
-            class="form-control"
-            type="text"
-            id="name"
-            name="name"
-            required
-            placeholder="Ex : Red Team Juin 2025"
-            maxlength="120"
-          >
+          <input class="form-control" type="text" id="name" name="name"
+            required placeholder="Ex : Red Team Juin 2025" maxlength="120">
         </div>
+
         <div class="form-group">
           <label for="description">Description (optionnelle)</label>
-          <textarea
-            class="form-control"
-            id="description"
-            name="description"
-            placeholder="Contexte, périmètre, objectifs…"
-            rows="3"
-          ></textarea>
+          <textarea class="form-control" id="description" name="description"
+            placeholder="Contexte, périmètre, objectifs…" rows="3"></textarea>
         </div>
+
+        <div class="form-group">
+          <label for="tags">
+            Groupes d'attaquants
+            <span style="font-weight:400; color:var(--gris); font-size:.78rem;">(optionnel)</span>
+          </label>
+          <input class="form-control" type="text" id="tags" name="tags"
+            placeholder="ex : APT28, Lazarus"
+            list="apt-suggestions">
+          <datalist id="apt-suggestions">
+            <option value="APT28"><option value="APT29"><option value="APT41">
+            <option value="APT32"><option value="APT38"><option value="Lazarus">
+            <option value="Sandworm"><option value="Turla"><option value="FIN7">
+            <option value="FIN11"><option value="Carbanak"><option value="ALPHV">
+            <option value="LockBit"><option value="Conti"><option value="REvil">
+          </datalist>
+          <small style="color:var(--gris); font-size:.72rem; margin-top:.25rem; display:block;">
+            Séparés par des virgules
+          </small>
+        </div>
+
         <button type="submit" class="btn btn--primary" style="width:100%;">
           Créer la campagne
         </button>

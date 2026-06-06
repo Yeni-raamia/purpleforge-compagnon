@@ -11,20 +11,19 @@ from sqlmodel import Field, SQLModel
 
 
 class Campaign(SQLModel, table=True):
-    """Table 'campaign' en base de données.
+    """Table 'campaign' en base de données."""
 
-    table=True signifie : ce n'est pas juste une classe Python,
-    c'est aussi une vraie table SQLite.
-    """
-
-    # Clé primaire : SQLite attribue l'id automatiquement (auto-incrément).
     id: Optional[int] = Field(default=None, primary_key=True)
 
     # Nom de la campagne (obligatoire, indexé pour des recherches rapides).
     name: str = Field(index=True)
 
-    # Description libre (optionnelle, vide par défaut).
+    # Description libre (optionnelle).
     description: str = Field(default="")
 
-    # Date de création : remplie automatiquement à l'insertion.
+    # Tags groupes d'attaquants : chaîne séparée par virgules (ex: "APT28, Lazarus").
+    # Stocké en texte simple, parsé à l'affichage.
+    tags: str = Field(default="")
+
+    # Date de création.
     created_at: datetime = Field(default_factory=datetime.utcnow)

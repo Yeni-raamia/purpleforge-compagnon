@@ -3,49 +3,125 @@
 {% block title %}{{ campaign.name }} — PurpleForge Compagnon{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <a href="/campaigns/" class="back-link">← Toutes les campagnes</a>
-  <h1 class="page-title">{{ campaign.name }}</h1>
-  {% if campaign.description %}
-  <p class="page-subtitle">{{ campaign.description }}</p>
-  {% endif %}
-  <p class="page-meta">Créée le {{ campaign.created_at.strftime('%d %B %Y') }}</p>
+<div class="page-wrap">
+
+  <!-- ─── En-tête ────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/campaigns/" class="btn-back">← Toutes les campagnes</a>
+      <h1 class="page-title">{{ campaign.name }}</h1>
+      {% if campaign.description %}
+      <p class="page-subtitle">{{ campaign.description }}</p>
+      {% endif %}
+      <p class="page-meta">Créée le {{ campaign.created_at.strftime('%d %B %Y') }}</p>
+
+      <!-- Tags APT / groupes d'attaquants -->
+      {% if campaign.tags %}
+      <div class="apt-tags" style="margin-top:.6rem;">
+        {% for tag in campaign.tags.split(',') %}
+        {% set t = tag.strip() %}
+        {% if t %}<span class="apt-tag">{{ t }}</span>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Bouton d'édition -->
+    <div class="page-header__actions">
+      <button class="btn btn--outline" onclick="toggleEditForm()">✏ Modifier</button>
+    </div>
+  </div>
+
+  <!-- ─── Formulaire d'édition (masqué par défaut) ─────────────────────── -->
+  <div class="edit-panel" id="edit-panel" style="display:none;">
+    <h2 class="edit-panel__title">Modifier la campagne</h2>
+    <form method="post" action="/campaigns/{{ campaign.id }}/edit" class="edit-form">
+
+      <div class="form-group">
+        <label for="edit-name">Nom</label>
+        <input class="form-control" type="text" id="edit-name" name="name"
+          value="{{ campaign.name }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-desc">Description</label>
+        <textarea class="form-control" id="edit-desc" name="description"
+          rows="2">{{ campaign.description }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-tags">
+          Groupes d'attaquants (tags)
+          <span style="font-weight:400; color:var(--gris); font-size:.8rem;">— séparés par des virgules</span>
+        </label>
+        <input class="form-control" type="text" id="edit-tags" name="tags"
+          value="{{ campaign.tags }}"
+          placeholder="ex : APT28, Lazarus, FIN7"
+          list="apt-list">
+        <datalist id="apt-list">
+          <option value="APT28"><option value="APT29"><option value="APT41">
+          <option value="APT32"><option value="APT38"><option value="Lazarus">
+          <option value="Sandworm"><option value="Turla"><option value="FIN7">
+          <option value="FIN11"><option value="Carbanak"><option value="Equation Group">
+          <option value="ALPHV"><option value="LockBit"><option value="Conti">
+          <option value="REvil"><option value="UNC2452">
+        </datalist>
+      </div>
+
+      <div style="display:flex; gap:.6rem;">
+        <button type="submit" class="btn btn--primary">Sauvegarder</button>
+        <button type="button" class="btn btn--outline" onclick="toggleEditForm()">Annuler</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ─── Boutons d'action ──────────────────────────────────────────────── -->
+  <div class="campaign-actions">
+    <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
+      Ouvrir la matrice ATT&CK →
+    </a>
+    <a href="/campaigns/{{ campaign.id }}/coverage" class="btn btn--secondary">
+      Voir la couverture
+    </a>
+    <a href="/campaigns/{{ campaign.id }}/export" class="btn btn--secondary" download>
+      ⬇ Navigator JSON
+    </a>
+    <a href="/campaigns/{{ campaign.id }}/print" class="btn btn--secondary" target="_blank">
+      🖨️ Rapport PDF
+    </a>
+  </div>
+
+  <!-- ─── Techniques ───────────────────────────────────────────────────── -->
+  <section>
+    <h2 class="section-title">
+      Techniques jouées
+      <span class="count-badge">{{ techniques | length }}</span>
+    </h2>
+
+    {% if techniques %}
+    <div class="technique-list">
+      {% for t in techniques %}
+        {% with technique=t, campaign_id=campaign.id %}
+          {% include "campaigns/partials/technique_card.html" %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>Aucune technique ajoutée à cette campagne.</p>
+      <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary" style="margin-top:1rem;">
+        Ouvrir la matrice ATT&CK →
+      </a>
+    </div>
+    {% endif %}
+  </section>
+
 </div>
 
-<!-- Boutons d'action de la campagne -->
-<div class="campaign-actions">
-  <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
-    Ouvrir la matrice ATT&CK →
-  </a>
-  <a href="/campaigns/{{ campaign.id }}/coverage" class="btn btn--secondary">
-    Voir la couverture
-  </a>
-  <a href="/campaigns/{{ campaign.id }}/export" class="btn btn--secondary" download>
-    ⬇ Exporter Navigator
-  </a>
-</div>
-
-<!-- Techniques enregistrées -->
-<section>
-  <h2 class="section-title">
-    Techniques jouées
-    <span class="count-badge">{{ techniques | length }}</span>
-  </h2>
-
-  {% if techniques %}
-  <div class="technique-list">
-    {% for t in techniques %}
-      <!-- with crée des variables locales transmises au partial inclus. -->
-      {% with technique=t, campaign_id=campaign.id %}
-        {% include "campaigns/partials/technique_card.html" %}
-      {% endwith %}
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="empty-state">
-    <p>Aucune technique ajoutée à cette campagne.</p>
-    <p>La matrice ATT&CK (bientôt) te permettra d'en ajouter en un clic.</p>
-  </div>
-  {% endif %}
-</section>
+<script>
+function toggleEditForm() {
+  const panel = document.getElementById('edit-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+</script>
 {% endblock %}

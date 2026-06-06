@@ -1,10 +1,12 @@
 """Routes d'authentification.
 
-GET  /login   → page de connexion (formulaire)
-POST /login   → vérification des identifiants → session → redirection
-POST /logout  → destruction de la session → /login
-GET  /setup   → page de création du premier compte admin (si aucun user)
-POST /setup   → création du compte admin → connexion automatique → /campaigns/
+GET  /login          → page de connexion (formulaire)
+POST /login          → vérification des identifiants → session → redirection
+POST /logout         → destruction de la session → /login
+GET  /setup          → page de création du premier compte admin (si aucun user)
+POST /setup          → création du compte admin → connexion automatique → /campaigns/
+GET  /account        → page de profil / changement de mot de passe
+POST /account/password → traitement changement de mot de passe
 """
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -14,6 +16,7 @@ from pathlib import Path
 from sqlmodel import Session, select
 
 from app.database import get_session
+from app.dependencies import require_user
 from app.models.user import User
 from app.services.auth import hash_password, verify_password, validate_password_strength
 
@@ -137,3 +140,64 @@ def setup(
     request.session["username"] = admin.username
 
     return RedirectResponse(url="/campaigns/", status_code=303)
+
+
+# ── /account ───────────────────────────────────────────────────────────────────
+
+@router.get("/account", response_class=HTMLResponse)
+def account_page(
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Page de profil : affiche les infos et le formulaire de changement de mot de passe."""
+    return templates.TemplateResponse(
+        request,
+        "auth/account.html",
+        {"current_user": current_user, "success": None, "error": None},
+    )
+
+
+@router.post("/account/password", response_class=HTMLResponse)
+def change_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password:     str = Form(...),
+    new_password2:    str = Form(...),
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Traite le changement de mot de passe."""
+
+    def render(error=None, success=None, status_code=200):
+        return templates.TemplateResponse(
+            request,
+            "auth/account.html",
+            {"current_user": current_user, "error": error, "success": success},
+            status_code=status_code,
+        )
+
+    # 1. Vérifier l'ancien mot de passe.
+    if not verify_password(current_password, current_user.hashed_password):
+        return render(error="Mot de passe actuel incorrect.", status_code=401)
+
+    # 2. Robustesse du nouveau mot de passe.
+    pwd_errors = validate_password_strength(new_password)
+    if pwd_errors:
+        return render(
+            error="Nouveau mot de passe trop faible — il lui manque : " + ", ".join(pwd_errors) + ".",
+            status_code=422,
+        )
+
+    # 3. Confirmation.
+    if new_password != new_password2:
+        return render(error="Les deux nouveaux mots de passe ne correspondent pas.", status_code=422)
+
+    # 4. Mise à jour en base.
+    # On recharge l'utilisateur depuis la session DB pour avoir un objet rattaché.
+    db_user = session.get(User, current_user.id)
+    db_user.hashed_password = hash_password(new_password)
+    session.add(db_user)
+    session.commit()
+
+    return render(success="Mot de passe modifié avec succès ✓")

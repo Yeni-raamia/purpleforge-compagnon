@@ -15,6 +15,48 @@
 
   <!-- HTMX : interactivité sans rechargement de page -->
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <!-- Marked.js : rendu Markdown côté navigateur (léger, sans dépendance) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <script>
+    // ── Rendu Markdown sur les éléments .md-rendered ──────────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+      renderAllMarkdown();
+    });
+    // Ré-appel après chaque swap HTMX (nouvelles cartes chargées)
+    document.addEventListener('htmx:afterSwap', function () {
+      renderAllMarkdown();
+    });
+
+    function renderAllMarkdown() {
+      document.querySelectorAll('.md-rendered[data-md]').forEach(function (el) {
+        if (!el.dataset.rendered) {
+          el.innerHTML = marked.parse(el.dataset.md || '');
+          el.dataset.rendered = '1';
+        }
+      });
+    }
+
+    // ── Onglets Éditer / Aperçu dans les cartes techniques ────────────────
+    function mdSwitchTab(techId, mode) {
+      const textarea   = document.getElementById('note-' + techId);
+      const preview    = document.getElementById('md-preview-' + techId);
+      const tabs       = document.getElementById('md-tabs-' + techId);
+      const tabBtns    = tabs ? tabs.querySelectorAll('.md-tab') : [];
+
+      tabBtns.forEach(function (btn) { btn.classList.remove('md-tab--active'); });
+
+      if (mode === 'preview') {
+        preview.innerHTML = marked.parse(textarea.value || '*Rien à afficher.*');
+        textarea.style.display = 'none';
+        preview.style.display  = 'block';
+        tabBtns[1] && tabBtns[1].classList.add('md-tab--active');
+      } else {
+        textarea.style.display = 'block';
+        preview.style.display  = 'none';
+        tabBtns[0] && tabBtns[0].classList.add('md-tab--active');
+      }
+    }
+  </script>
 </head>
 <body>
 
@@ -34,6 +76,9 @@
       <!-- Navigation principale -->
       <nav class="app-nav" aria-label="Navigation principale">
         <a href="/" class="app-nav__link">Accueil</a>
+        {% if current_user is defined and current_user %}
+        <a href="/dashboard" class="app-nav__link">Dashboard</a>
+        {% endif %}
         <a href="/campaigns/" class="app-nav__link app-nav__link--cta">
           Campagnes
         </a>
@@ -44,9 +89,9 @@
           <span class="app-nav__avatar" aria-hidden="true">
             {{ (current_user.display_name or current_user.username)[0] | upper }}
           </span>
-          <span class="app-nav__username">
+          <a href="/account" class="app-nav__username" title="Mon compte">
             {{ current_user.display_name or current_user.username }}
-          </span>
+          </a>
           {% if current_user.is_admin %}
           <a href="/admin/users" class="app-nav__link app-nav__link--admin" title="Gérer les utilisateurs">
             ⚙ Admin

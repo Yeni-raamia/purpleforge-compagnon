@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapport — {{ campaign.name }}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --violet: #7B2FBE;
+      --violet-clair: #A855F7;
+      --or: #E0A23C;
+      --detecte: #16a34a;
+      --construire: #ca8a04;
+      --non-detecte: #dc2626;
+      --gris: #6b7280;
+      --bordure: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      font-size: 11pt;
+      color: #111827;
+      background: #fff;
+      padding: 0;
+    }
+
+    /* ── En-tête du rapport ── */
+    .report-header {
+      background: linear-gradient(135deg, #12091F 0%, #2D1458 100%);
+      color: #fff;
+      padding: 2.5rem 2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .report-header__logo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #fff;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIxMjAgNDYgNDQwIDQ0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiByb2xlPSJpbWciPjx0aXRsZT5NYXNjb3R0ZSBkZXMgb3V0aWxzIENvbXBhZ25vbjwvdGl0bGU+PGRlc2M+UGV0aXQgb2lzZWF1IHZlcnQsIHJvbmQgZXQgYmllbnZlaWxsYW50IOKAlCBtYXNjb3R0ZSBkZSBsYSBmYW1pbGxlIGRlcyBvdXRpbHMgQ29tcGFnbm9uPC9kZXNjPjxlbGxpcHNlIGN4PSIzNDAiIGN5PSIxMDQiIHJ4PSIxNCIgcnk9IjI5IiBmaWxsPSIjMUU1QzNBIi8+PGVsbGlwc2UgY3g9IjMxMyIgY3k9IjExNCIgcng9IjEyIiByeT0iMjUiIGZpbGw9IiMxRTVDM0EiIHRyYW5zZm9ybT0icm90YXRlKC0yNiAzMTMgMTE0KSIvPjxlbGxpcHNlIGN4PSIzNjciIGN5PSIxMTQiIHJ4PSIxMiIgcnk9IjI1IiBmaWxsPSIjMUU1QzNBIiB0cmFuc2Zvcm09InJvdGF0ZSgyNiAzNjcgMTE0KSIvPjxsaW5lIHgxPSIzMTQiIHkxPSI0MDQiIHgyPSIzMTQiIHkyPSI0MzYiIHN0cm9rZT0iI0UwQTIzQyIgc3Ryb2tlLXdpZHRoPSI5IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMzY2IiB5MT0iNDA0IiB4Mj0iMzY2IiB5Mj0iNDM2IiBzdHJva2U9IiNFMEEyM0MiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGVsbGlwc2UgY3g9IjMwOCIgY3k9IjQ0NSIgcng9IjI0IiByeT0iMTIiIGZpbGw9IiNFMEEyM0MiLz48ZWxsaXBzZSBjeD0iMzcyIiBjeT0iNDQ1IiByeD0iMjQiIHJ5PSIxMiIgZmlsbD0iI0UwQTIzQyIvPjxlbGxpcHNlIGN4PSIzNDAiIGN5PSIyNzIiIHJ4PSIxNDAiIHJ5PSIxNTAiIGZpbGw9IiMxRTVDM0EiLz48ZWxsaXBzZSBjeD0iMzQwIiBjeT0iMjk4IiByeD0iMTA4IiByeT0iMTIwIiBmaWxsPSIjRjNGNEVGIi8+PHBhdGggZD0iTSAyOTIgMzM2IEMgMjcyIDM0NiwgMjY2IDM4NCwgMjgxIDQxMCBDIDMwMCAzODgsIDMwNiAzNTQsIDI5MiAzMzYgWiIgZmlsbD0iIzFFNUMzQSIvPjxwYXRoIGQ9Ik0gMzg4IDMzNiBDIDQwOCAzNDYsIDQxNCAzODQsIDM5OSA0MTAgQyAzODAgMzg4LCAzNzQgMzU0LCAzODggMzM2IFoiIGZpbGw9IiMxRTVDM0EiLz48Y2lyY2xlIGN4PSIzMDAiIGN5PSIyNjIiIHI9IjIxIiBmaWxsPSIjMUMyQTIyIi8+PGNpcmNsZSBjeD0iMjkzIiBjeT0iMjU0IiByPSI3IiBmaWxsPSIjRkZGRkZGIi8+PGNpcmNsZSBjeD0iMzA4IiBjeT0iMjY3IiByPSIzLjIiIGZpbGw9IiNGRkZGRkYiLz48Y2lyY2xlIGN4PSIzODAiIGN5PSIyNjIiIHI9IjIxIiBmaWxsPSIjMUMyQTIyIi8+PGNpcmNsZSBjeD0iMzczIiBjeT0iMjU0IiByPSI3IiBmaWxsPSIjRkZGRkZGIi8+PGNpcmNsZSBjeD0iMzg4IiBjeT0iMjY3IiByPSIzLjIiIGZpbGw9IiNGRkZGRkYiLz48Y2lyY2xlIGN4PSIyNjgiIGN5PSIzMTQiIHI9IjE3IiBmaWxsPSIjRTBBMjNDIiBvcGFjaXR5PSIwLjUiLz48Y2lyY2xlIGN4PSI0MTIiIGN5PSIzMTQiIHI9IjE3IiBmaWxsPSIjRTBBMjNDIiBvcGFjaXR5PSIwLjUiLz48cG9seWdvbiBwb2ludHM9IjM0MCwzMzQgMzIyLDMwNyAzNTgsMzA3IiBmaWxsPSIjRTBBMjNDIiBzdHJva2U9IiNFMEEyM0MiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==');
+      background-size: 82%;
+      background-repeat: no-repeat;
+      background-position: center;
+      flex-shrink: 0;
+    }
+
+    .report-header__info { flex: 1; }
+
+    .report-header__brand {
+      font-size: 10pt;
+      color: rgba(255,255,255,.6);
+      margin-bottom: .35rem;
+    }
+
+    .report-header__title {
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 22pt;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .report-header__desc {
+      font-size: 10pt;
+      color: rgba(255,255,255,.7);
+      margin-top: .3rem;
+    }
+
+    .report-header__meta {
+      text-align: right;
+      font-size: 9pt;
+      color: rgba(255,255,255,.6);
+      line-height: 1.8;
+    }
+
+    /* ── Bouton d'impression (masqué à l'impression) ── */
+    .print-bar {
+      background: #f3f4f6;
+      border-bottom: 1px solid var(--bordure);
+      padding: .75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .print-bar p { font-size: .85rem; color: var(--gris); }
+
+    .print-btn {
+      background: var(--violet);
+      color: #fff;
+      border: none;
+      border-radius: .5rem;
+      padding: .5rem 1.25rem;
+      font-family: 'Baloo 2', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ── Statistiques ── */
+    .report-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-bottom: 2px solid var(--bordure);
+    }
+
+    .stat-block {
+      padding: 1rem 1.25rem;
+      border-right: 1px solid var(--bordure);
+      text-align: center;
+    }
+
+    .stat-block:last-child { border-right: none; }
+
+    .stat-block__value {
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      display: block;
+    }
+
+    .stat-block__label {
+      font-size: .75rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .stat-block--detecte   .stat-block__value { color: var(--detecte); }
+    .stat-block--construire .stat-block__value { color: var(--construire); }
+    .stat-block--non       .stat-block__value { color: var(--non-detecte); }
+
+    /* Barre de progression */
+    .report-bar-wrap { padding: .75rem 2rem; border-bottom: 2px solid var(--bordure); }
+
+    .report-bar {
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .report-bar__seg--d { background: var(--detecte); }
+    .report-bar__seg--c { background: var(--construire); }
+    .report-bar__seg--n { background: var(--non-detecte); }
+
+    /* ── Tags APT ── */
+    .report-tags {
+      padding: .6rem 2rem;
+      border-bottom: 1px solid var(--bordure);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .report-tags__label { font-size: .8rem; font-weight: 700; color: var(--gris); }
+
+    .apt-tag-print {
+      background: #ede9fe;
+      color: #7c3aed;
+      border: 1px solid #ddd6fe;
+      border-radius: .35rem;
+      padding: .15rem .55rem;
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    /* ── Corps du rapport ── */
+    .report-body { padding: 1.5rem 2rem; }
+
+    .tactic-section { margin-bottom: 1.5rem; page-break-inside: avoid; }
+
+    .tactic-title {
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--violet);
+      border-bottom: 2px solid var(--violet-clair);
+      padding-bottom: .3rem;
+      margin-bottom: .75rem;
+    }
+
+    /* Tableau des techniques */
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin-bottom: .5rem;
+    }
+
+    .tech-table th {
+      background: #f3f4f6;
+      padding: .4rem .6rem;
+      text-align: left;
+      font-size: 8.5pt;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border-bottom: 2px solid var(--bordure);
+    }
+
+    .tech-table td {
+      padding: .45rem .6rem;
+      border-bottom: 1px solid var(--bordure);
+      vertical-align: top;
+    }
+
+    .tech-table tr:last-child td { border-bottom: none; }
+
+    .status-pill {
+      display: inline-block;
+      padding: .1rem .5rem;
+      border-radius: .35rem;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+
+    .status-pill--d { background: #dcfce7; color: var(--detecte); }
+    .status-pill--c { background: #fef9c3; color: var(--construire); }
+    .status-pill--n { background: #fee2e2; color: var(--non-detecte); }
+
+    .attack-id-print {
+      font-family: monospace;
+      font-size: 8.5pt;
+      color: var(--violet);
+      font-weight: 700;
+    }
+
+    .note-print {
+      font-size: 8.5pt;
+      color: #374151;
+      line-height: 1.5;
+    }
+
+    .note-print p { margin: 0 0 .2rem; }
+
+    /* ── Pied de page ── */
+    .report-footer {
+      border-top: 2px solid var(--bordure);
+      padding: .75rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5pt;
+      color: var(--gris);
+      margin-top: 1rem;
+    }
+
+    /* ── Règles @media print ── */
+    @media print {
+      .print-bar { display: none !important; }
+      body { padding: 0; }
+      .tactic-section { page-break-inside: avoid; }
+      @page { margin: 1.5cm; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Barre d'impression (masquée à l'impression) -->
+<div class="print-bar">
+  <p>🖨️ Utilise <strong>Ctrl+P</strong> → <em>Enregistrer en PDF</em> pour exporter ce rapport.</p>
+  <button class="print-btn" onclick="window.print()">🖨️ Imprimer / Exporter PDF</button>
+</div>
+
+<!-- En-tête du rapport -->
+<div class="report-header">
+  <div class="report-header__logo"></div>
+  <div class="report-header__info">
+    <p class="report-header__brand">PurpleForge Compagnon · Rapport de campagne</p>
+    <h1 class="report-header__title">{{ campaign.name }}</h1>
+    {% if campaign.description %}
+    <p class="report-header__desc">{{ campaign.description }}</p>
+    {% endif %}
+  </div>
+  <div class="report-header__meta">
+    <div>Créée le {{ campaign.created_at.strftime("%d/%m/%Y") }}</div>
+    <div>{{ total }} technique{% if total > 1 %}s{% endif %} jouée{% if total > 1 %}s{% endif %}</div>
+    <div>{{ pct_detecte }}% détecté</div>
+  </div>
+</div>
+
+<!-- Statistiques -->
+<div class="report-stats">
+  <div class="stat-block">
+    <span class="stat-block__value">{{ total }}</span>
+    <span class="stat-block__label">Techniques jouées</span>
+  </div>
+  <div class="stat-block stat-block--detecte">
+    <span class="stat-block__value">{{ counts.detecte }}</span>
+    <span class="stat-block__label">Détectées</span>
+  </div>
+  <div class="stat-block stat-block--construire">
+    <span class="stat-block__value">{{ counts.a_construire }}</span>
+    <span class="stat-block__label">À construire</span>
+  </div>
+  <div class="stat-block stat-block--non">
+    <span class="stat-block__value">{{ counts.non_detecte }}</span>
+    <span class="stat-block__label">Non détectées</span>
+  </div>
+</div>
+
+<!-- Barre de couverture -->
+{% if total > 0 %}
+<div class="report-bar-wrap">
+  <div class="report-bar">
+    <div class="report-bar__seg--d" style="width:{{ (counts.detecte / total * 100) | round | int }}%"></div>
+    <div class="report-bar__seg--c" style="width:{{ (counts.a_construire / total * 100) | round | int }}%"></div>
+    <div class="report-bar__seg--n" style="width:{{ (counts.non_detecte / total * 100) | round | int }}%"></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Tags APT (si présents) -->
+{% if campaign.tags %}
+<div class="report-tags">
+  <span class="report-tags__label">Groupes ATT&CK :</span>
+  {% for tag in campaign.tags.split(',') %}
+  {% set t = tag.strip() %}
+  {% if t %}<span class="apt-tag-print">{{ t }}</span>{% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Corps : techniques par tactique -->
+<div class="report-body">
+  {% for tactic in by_tactic %}
+  <div class="tactic-section">
+    <h2 class="tactic-title">{{ tactic.name }}</h2>
+    <table class="tech-table">
+      <thead>
+        <tr>
+          <th style="width:90px">ID</th>
+          <th style="width:200px">Technique</th>
+          <th style="width:90px">Statut</th>
+          <th>Note Blue Team</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tactic.techniques %}
+        <tr>
+          <td><span class="attack-id-print">{{ t.attack_id }}</span></td>
+          <td>{{ t.name }}</td>
+          <td>
+            {% if t.status.value == 'detecte' %}
+            <span class="status-pill status-pill--d">✓ Détectée</span>
+            {% elif t.status.value == 'a_construire' %}
+            <span class="status-pill status-pill--c">⚠ À construire</span>
+            {% else %}
+            <span class="status-pill status-pill--n">✗ Non détectée</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if t.blue_note %}
+            <div class="note-print md-note-print" data-md="{{ t.blue_note | e }}"></div>
+            {% else %}
+            <span style="color:#9ca3af; font-size:8.5pt">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pied de page -->
+<div class="report-footer">
+  <span>PurpleForge Compagnon · Suite Outils Compagnon · Conçu par Yeni DOUKAKAS</span>
+  <span>Généré le {{ now }}</span>
+</div>
+
+<script>
+  // Rendu Markdown dans les notes du rapport
+  document.querySelectorAll('.md-note-print[data-md]').forEach(function(el) {
+    el.innerHTML = marked.parse(el.dataset.md || '');
+  });
+</script>
+</body>
+</html>

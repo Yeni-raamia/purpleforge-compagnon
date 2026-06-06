@@ -36,15 +36,29 @@
         </select>
       </div>
 
+      <!-- Note blue team avec onglets Éditer / Aperçu Markdown -->
       <div class="form-group">
-        <label for="note-{{ technique.id }}">Note blue team</label>
+        <div class="md-note-header">
+          <label>Note blue team <span class="md-note-hint">Markdown supporté</span></label>
+          <div class="md-tabs" id="md-tabs-{{ technique.id }}">
+            <button type="button" class="md-tab md-tab--active"
+              onclick="mdSwitchTab({{ technique.id }}, 'edit')">✏ Éditer</button>
+            <button type="button" class="md-tab"
+              onclick="mdSwitchTab({{ technique.id }}, 'preview')">👁 Aperçu</button>
+          </div>
+        </div>
+
+        <!-- Textarea (mode édition) -->
         <textarea
-          class="form-control"
+          class="form-control md-textarea"
           id="note-{{ technique.id }}"
           name="blue_note"
-          placeholder="Règle déployée, ticket SIEM, observation…"
-          rows="2"
+          placeholder="Règle déployée, ticket SIEM, observation…&#10;&#10;**Markdown** supporté : gras, *italique*, `code`, listes…"
+          rows="4"
         >{{ technique.blue_note }}</textarea>
+
+        <!-- Zone de prévisualisation (cachée par défaut) -->
+        <div class="md-preview" id="md-preview-{{ technique.id }}" style="display:none;"></div>
       </div>
 
       <div style="display:flex; gap:0.5rem; align-items:center;">
@@ -54,6 +68,14 @@
         <span class="htmx-indicator"></span>
       </div>
     </form>
+
+    <!-- Note sauvegardée rendue en Markdown (si non vide) -->
+    {% if technique.blue_note %}
+    <div class="blue-note-display">
+      <span class="blue-note-display__label">📝 Note blue team</span>
+      <div class="md-rendered" data-md="{{ technique.blue_note | e }}"></div>
+    </div>
+    {% endif %}
 
     <!-- Section Sigma (HTMX : chargement à la demande) -->
     <div class="sigma-zone" style="margin-top:0.9rem;">
