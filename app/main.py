@@ -15,6 +15,7 @@ from fastapi.templating import Jinja2Templates
 from app.database import create_db_and_tables
 import app.models  # noqa: F401 — importe Campaign + TechniqueEntry pour que create_all les connaisse
 from app.routes import campaigns as campaigns_router
+from app.routes import techniques as techniques_router
 
 # Dossier de base = le dossier "app" où se trouve ce fichier.
 # On s'en sert pour retrouver "templates" et "static" de façon fiable,
@@ -42,6 +43,7 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 # On enregistre les routes des campagnes (préfixe /campaigns).
 app.include_router(campaigns_router.router)
+app.include_router(techniques_router.router)
 
 
 @app.get("/", response_class=HTMLResponse)

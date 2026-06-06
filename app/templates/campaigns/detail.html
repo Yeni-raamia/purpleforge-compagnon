@@ -29,31 +29,10 @@
   {% if techniques %}
   <div class="technique-list">
     {% for t in techniques %}
-    <div class="technique-card">
-      <div class="technique-card__header">
-        <span class="attack-id">{{ t.attack_id }}</span>
-        <span class="technique-name">{{ t.name }}</span>
-        <span class="tactic-badge">{{ t.tactic }}</span>
-        <!-- Statut : toujours accompagné du texte (accessibilité) -->
-        {% if t.status.value == 'detecte' %}
-          <span class="status-badge status-badge--ok">✓ Détecté</span>
-        {% elif t.status.value == 'a_construire' %}
-          <span class="status-badge status-badge--warn">⚠ À construire</span>
-        {% else %}
-          <span class="status-badge status-badge--danger">✗ Non détecté</span>
-        {% endif %}
-      </div>
-      {% if t.red_note or t.blue_note %}
-      <div class="technique-card__notes">
-        {% if t.red_note %}
-        <div class="note note--red"><strong>Red :</strong> {{ t.red_note }}</div>
-        {% endif %}
-        {% if t.blue_note %}
-        <div class="note note--blue"><strong>Blue :</strong> {{ t.blue_note }}</div>
-        {% endif %}
-      </div>
-      {% endif %}
-    </div>
+      <!-- with crée des variables locales transmises au partial inclus. -->
+      {% with technique=t, campaign_id=campaign.id %}
+        {% include "campaigns/partials/technique_card.html" %}
+      {% endwith %}
     {% endfor %}
   </div>
   {% else %}

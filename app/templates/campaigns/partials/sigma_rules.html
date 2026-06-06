@@ -1,0 +1,39 @@
+<!-- Fragment HTMX : règles Sigma pour une technique. -->
+<!-- Injecté dans #sigma-{tech_id} au clic sur "Voir les détections". -->
+
+{% if rules %}
+<ul class="sigma-rule-list">
+  {% for rule in rules %}
+  <li class="sigma-rule">
+    <div class="sigma-rule__header">
+      <strong class="sigma-rule__title">{{ rule.title }}</strong>
+      {% if rule.level %}
+      <span class="sigma-level sigma-level--{{ rule.level }}">{{ rule.level }}</span>
+      {% endif %}
+    </div>
+
+    {% if rule.description %}
+    <p class="sigma-rule__desc">{{ rule.description }}</p>
+    {% endif %}
+
+    <div class="sigma-logs">
+      <span class="sigma-logs__label">Logs requis :</span>
+      <span class="sigma-logs__value">{{ rule.required_logs }}</span>
+    </div>
+
+    <!-- Règle YAML : affichée dans un bloc monospace repliable -->
+    <details class="sigma-yaml-details">
+      <summary>Voir la règle YAML</summary>
+      <pre class="sigma-yaml"><code>{{ rule.yaml_content }}</code></pre>
+    </details>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="sigma-empty">
+  Aucune règle Sigma trouvée dans SigmaHQ pour
+  <strong>{{ technique.attack_id }}</strong>.
+  <a href="https://github.com/SigmaHQ/sigma/tree/master/rules"
+     target="_blank" rel="noopener">Parcourir SigmaHQ →</a>
+</p>
+{% endif %}

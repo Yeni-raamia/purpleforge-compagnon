@@ -3,7 +3,8 @@
 # au moment où on s'en servira vraiment.
 
 fastapi            # le framework web (gère les pages et l'API)
-requests           # téléchargement des données ATT&CK depuis GitHub MITRE
+requests           # téléchargement des données ATT&CK et Sigma depuis GitHub
+pyyaml             # lecture des fichiers de règles Sigma (format YAML)
 uvicorn            # le serveur qui fait tourner l'appli en local
 sqlmodel           # ORM : fait le lien entre Python et la base de données
 jinja2             # le moteur de gabarits HTML (templates)
