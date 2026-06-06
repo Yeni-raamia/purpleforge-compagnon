@@ -87,6 +87,122 @@ def create_campaign(
     return RedirectResponse(url="/campaigns/", status_code=303)
 
 
+@router.get("/compare", response_class=HTMLResponse)
+def compare_campaigns(
+    request: Request,
+    a: int = 0,
+    b: int = 0,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Page de comparaison de deux campagnes : delta de détection technique par technique."""
+    all_campaigns = session.exec(
+        select(Campaign).order_by(Campaign.created_at.desc())
+    ).all()
+
+    ctx_base = {
+        "campaigns":   all_campaigns,
+        "camp_a_id":   a,
+        "camp_b_id":   b,
+        "comparison":  None,
+        "camp_a":      None,
+        "camp_b":      None,
+        "error":       None,
+        "current_user": current_user,
+    }
+
+    # Pas encore de sélection, ou même campagne choisie deux fois
+    if not a or not b:
+        return templates.TemplateResponse(request, "campaigns/compare.html", ctx_base)
+
+    if a == b:
+        ctx_base["error"] = "Sélectionne deux campagnes différentes."
+        return templates.TemplateResponse(request, "campaigns/compare.html", ctx_base)
+
+    camp_a = session.get(Campaign, a)
+    camp_b = session.get(Campaign, b)
+    if not camp_a or not camp_b:
+        ctx_base["error"] = "L'une des campagnes est introuvable."
+        return templates.TemplateResponse(request, "campaigns/compare.html", ctx_base)
+
+    # ── Chargement des techniques ──────────────────────────────────────────
+    techs_a = {t.attack_id: t for t in session.exec(
+        select(TechniqueEntry).where(TechniqueEntry.campaign_id == a)
+    ).all()}
+    techs_b = {t.attack_id: t for t in session.exec(
+        select(TechniqueEntry).where(TechniqueEntry.campaign_id == b)
+    ).all()}
+
+    STATUS_SCORE = {"detecte": 2, "a_construire": 1, "non_detecte": 0}
+
+    # ── Construction des lignes de comparaison ─────────────────────────────
+    rows = []
+    for attack_id in sorted(set(techs_a) | set(techs_b)):
+        ta = techs_a.get(attack_id)
+        tb = techs_b.get(attack_id)
+
+        status_a = ta.status.value if ta else None
+        status_b = tb.status.value if tb else None
+
+        if status_a is None:
+            delta = "nouveau"
+        elif status_b is None:
+            delta = "supprime"
+        elif STATUS_SCORE[status_b] > STATUS_SCORE[status_a]:
+            delta = "ameliore"
+        elif STATUS_SCORE[status_b] < STATUS_SCORE[status_a]:
+            delta = "regressee"
+        else:
+            delta = "stable"
+
+        rows.append({
+            "attack_id": attack_id,
+            "name":      (ta or tb).name,
+            "tactic":    (ta or tb).tactic,
+            "status_a":  status_a,
+            "status_b":  status_b,
+            "delta":     delta,
+        })
+
+    # Tri par ordre tactique canonique puis par identifiant ATT&CK
+    tactic_idx = {t: i for i, t in enumerate(TACTIC_ORDER)}
+    rows.sort(key=lambda r: (tactic_idx.get(r["tactic"], 99), r["attack_id"]))
+
+    # ── Statistiques globales ──────────────────────────────────────────────
+    def _pct(techs):
+        if not techs:
+            return 0
+        det = sum(1 for t in techs.values() if t.status.value == "detecte")
+        return round(det * 100 / len(techs))
+
+    score_a = _pct(techs_a)
+    score_b = _pct(techs_b)
+
+    comparison = {
+        "rows":          rows,
+        "score_a":       score_a,
+        "score_b":       score_b,
+        "delta_score":   score_b - score_a,
+        "nb_ameliore":   sum(1 for r in rows if r["delta"] == "ameliore"),
+        "nb_regressee":  sum(1 for r in rows if r["delta"] == "regressee"),
+        "nb_stable":     sum(1 for r in rows if r["delta"] == "stable"),
+        "nb_nouveau":    sum(1 for r in rows if r["delta"] == "nouveau"),
+        "nb_supprime":   sum(1 for r in rows if r["delta"] == "supprime"),
+        "total":         len(rows),
+    }
+
+    return templates.TemplateResponse(
+        request,
+        "campaigns/compare.html",
+        {
+            **ctx_base,
+            "camp_a":     camp_a,
+            "camp_b":     camp_b,
+            "comparison": comparison,
+        },
+    )
+
+
 @router.get("/import", response_class=HTMLResponse)
 def import_campaign_page(
     request: Request,

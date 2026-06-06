@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Comparaison de campagnes — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <!-- ─── En-tête ─────────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <a href="/campaigns/" class="btn-back">← Toutes les campagnes</a>
+      <h1 class="page-title">Comparaison de campagnes</h1>
+      <p class="page-subtitle">
+        Mesure la progression de ta couverture de détection entre deux exercices.
+      </p>
+    </div>
+  </div>
+
+  <!-- ─── Sélecteur ───────────────────────────────────────────────────────── -->
+  <form method="get" action="/campaigns/compare" class="cmp-selector">
+    <div class="cmp-selector__col">
+      <label class="cmp-selector__label">Campagne A <span class="cmp-selector__hint">(référence / ancienne)</span></label>
+      <select name="a" class="form-control" required>
+        <option value="">-- Choisir --</option>
+        {% for c in campaigns %}
+        <option value="{{ c.id }}" {% if c.id == camp_a_id %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="cmp-selector__vs" aria-hidden="true">VS</div>
+
+    <div class="cmp-selector__col">
+      <label class="cmp-selector__label">Campagne B <span class="cmp-selector__hint">(récente / améliorée)</span></label>
+      <select name="b" class="form-control" required>
+        <option value="">-- Choisir --</option>
+        {% for c in campaigns %}
+        <option value="{{ c.id }}" {% if c.id == camp_b_id %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn--primary cmp-selector__btn">
+      Comparer →
+    </button>
+  </form>
+
+  <!-- ─── Erreur ─────────────────────────────────────────────────────────── -->
+  {% if error %}
+  <div class="import-error" style="margin-top:1rem;">
+    <span class="import-error__icon">⚠</span>
+    <span>{{ error }}</span>
+  </div>
+  {% endif %}
+
+  <!-- ─── Résultats ───────────────────────────────────────────────────────── -->
+  {% if comparison %}
+
+  <!-- Hero : scores globaux -->
+  <div class="cmp-hero">
+
+    <!-- Score A -->
+    <div class="cmp-score cmp-score--a">
+      <div class="cmp-score__label">{{ camp_a.name }}</div>
+      {% if camp_a.tags %}
+      <div class="apt-tags apt-tags--sm" style="justify-content:center; margin-bottom:.5rem;">
+        {% for tag in camp_a.tags.split(',') %}{% set t=tag.strip() %}
+        {% if t %}<span class="apt-tag apt-tag--sm">{{ t }}</span>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="cmp-score__pct">{{ comparison.score_a }}<span class="cmp-score__unit">%</span></div>
+      <div class="cmp-score__sub">techniques détectées</div>
+    </div>
+
+    <!-- Delta central -->
+    <div class="cmp-delta
+      {% if comparison.delta_score > 0 %}cmp-delta--up
+      {% elif comparison.delta_score < 0 %}cmp-delta--down
+      {% else %}cmp-delta--flat{% endif %}">
+      <div class="cmp-delta__arrow">
+        {% if comparison.delta_score > 0 %}⬆
+        {% elif comparison.delta_score < 0 %}⬇
+        {% else %}={% endif %}
+      </div>
+      <div class="cmp-delta__val">
+        {% if comparison.delta_score > 0 %}+{% endif %}{{ comparison.delta_score }} pts
+      </div>
+      <div class="cmp-delta__sub">évolution</div>
+    </div>
+
+    <!-- Score B -->
+    <div class="cmp-score cmp-score--b">
+      <div class="cmp-score__label">{{ camp_b.name }}</div>
+      {% if camp_b.tags %}
+      <div class="apt-tags apt-tags--sm" style="justify-content:center; margin-bottom:.5rem;">
+        {% for tag in camp_b.tags.split(',') %}{% set t=tag.strip() %}
+        {% if t %}<span class="apt-tag apt-tag--sm">{{ t }}</span>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="cmp-score__pct">{{ comparison.score_b }}<span class="cmp-score__unit">%</span></div>
+      <div class="cmp-score__sub">techniques détectées</div>
+    </div>
+
+  </div>
+
+  <!-- Résumé en chips -->
+  <div class="cmp-chips">
+    <span class="cmp-chip cmp-chip--ameliore" data-filter="ameliore">
+      ⬆ Amélioré <strong>{{ comparison.nb_ameliore }}</strong>
+    </span>
+    <span class="cmp-chip cmp-chip--stable" data-filter="stable">
+      = Stable <strong>{{ comparison.nb_stable }}</strong>
+    </span>
+    <span class="cmp-chip cmp-chip--regressee" data-filter="regressee">
+      ⬇ Régressé <strong>{{ comparison.nb_regressee }}</strong>
+    </span>
+    <span class="cmp-chip cmp-chip--nouveau" data-filter="nouveau">
+      ★ Nouveau <strong>{{ comparison.nb_nouveau }}</strong>
+    </span>
+    <span class="cmp-chip cmp-chip--supprime" data-filter="supprime">
+      ✕ Absent <strong>{{ comparison.nb_supprime }}</strong>
+    </span>
+    <span class="cmp-chip cmp-chip--all cmp-chip--active" data-filter="all">
+      Tout <strong>{{ comparison.total }}</strong>
+    </span>
+  </div>
+
+  <!-- Tableau de comparaison -->
+  <div class="cmp-table-wrap">
+    <table class="cmp-table" id="cmp-table">
+      <thead>
+        <tr>
+          <th class="cmp-th cmp-th--id">ID</th>
+          <th class="cmp-th cmp-th--name">Technique</th>
+          <th class="cmp-th cmp-th--tactic">Tactique</th>
+          <th class="cmp-th cmp-th--status">Campagne A</th>
+          <th class="cmp-th cmp-th--status">Campagne B</th>
+          <th class="cmp-th cmp-th--delta">Évolution</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set current_tactic = namespace(value='') %}
+        {% for row in comparison.rows %}
+
+        {# Séparateur de tactique #}
+        {% if row.tactic != current_tactic.value %}
+        {% set current_tactic.value = row.tactic %}
+        <tr class="cmp-tactic-row" data-delta="tactic">
+          <td colspan="6" class="cmp-tactic-cell">
+            {{ row.tactic | replace('-', ' ') | title }}
+          </td>
+        </tr>
+        {% endif %}
+
+        <tr class="cmp-row cmp-row--{{ row.delta }}" data-delta="{{ row.delta }}">
+          <td class="cmp-td cmp-td--id">{{ row.attack_id }}</td>
+          <td class="cmp-td cmp-td--name">{{ row.name }}</td>
+          <td class="cmp-td cmp-td--tactic">{{ row.tactic | replace('-', ' ') | title }}</td>
+
+          <!-- Statut A -->
+          <td class="cmp-td cmp-td--status">
+            {% if row.status_a %}
+              <span class="cmp-badge cmp-badge--{{ row.status_a }}">
+                {% if row.status_a == 'detecte' %}✓ Détecté
+                {% elif row.status_a == 'a_construire' %}⚒ À construire
+                {% else %}✗ Non détecté{% endif %}
+              </span>
+            {% else %}
+              <span class="cmp-badge cmp-badge--absent">— Absent</span>
+            {% endif %}
+          </td>
+
+          <!-- Statut B -->
+          <td class="cmp-td cmp-td--status">
+            {% if row.status_b %}
+              <span class="cmp-badge cmp-badge--{{ row.status_b }}">
+                {% if row.status_b == 'detecte' %}✓ Détecté
+                {% elif row.status_b == 'a_construire' %}⚒ À construire
+                {% else %}✗ Non détecté{% endif %}
+              </span>
+            {% else %}
+              <span class="cmp-badge cmp-badge--absent">— Absent</span>
+            {% endif %}
+          </td>
+
+          <!-- Delta -->
+          <td class="cmp-td cmp-td--delta">
+            <span class="cmp-delta-badge cmp-delta-badge--{{ row.delta }}">
+              {% if row.delta == 'ameliore' %}⬆ Amélioré
+              {% elif row.delta == 'regressee' %}⬇ Régressé
+              {% elif row.delta == 'stable' %}= Stable
+              {% elif row.delta == 'nouveau' %}★ Nouveau
+              {% else %}✕ Absent{% endif %}
+            </span>
+          </td>
+        </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% elif not error and campaigns %}
+  <!-- État vide : aucune sélection -->
+  <div class="empty-state" style="margin-top:2rem;">
+    <p>Sélectionne deux campagnes ci-dessus pour voir leur comparaison.</p>
+  </div>
+  {% elif not campaigns %}
+  <div class="empty-state" style="margin-top:2rem;">
+    <p>Aucune campagne disponible. Crée au moins deux campagnes pour les comparer.</p>
+    <a href="/campaigns/" class="btn btn--primary" style="margin-top:1rem;">
+      Voir les campagnes →
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+/* ── Filtres par delta ──────────────────────────────────────────────── */
+document.querySelectorAll('.cmp-chip').forEach(function (chip) {
+  chip.addEventListener('click', function () {
+    const filter = this.dataset.filter;
+
+    // Mise à jour des chips actifs
+    document.querySelectorAll('.cmp-chip').forEach(function (c) {
+      c.classList.remove('cmp-chip--active');
+    });
+    this.classList.add('cmp-chip--active');
+
+    // Masquage/affichage des lignes
+    const rows   = document.querySelectorAll('#cmp-table tbody tr.cmp-row');
+    const tsep   = document.querySelectorAll('#cmp-table tbody tr.cmp-tactic-row');
+
+    rows.forEach(function (row) {
+      if (filter === 'all' || row.dataset.delta === filter) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    // Masquer les séparateurs de tactique si toutes leurs lignes sont masquées
+    tsep.forEach(function (sep) {
+      // Les lignes qui suivent ce séparateur jusqu'au prochain
+      let next = sep.nextElementSibling;
+      let hasVisible = false;
+      while (next && !next.classList.contains('cmp-tactic-row')) {
+        if (next.style.display !== 'none') hasVisible = true;
+        next = next.nextElementSibling;
+      }
+      sep.style.display = hasVisible ? '' : 'none';
+    });
+  });
+});
+</script>
+{% endblock %}
