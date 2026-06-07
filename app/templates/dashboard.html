@@ -156,6 +156,36 @@
   {% endif %}
 
   <!-- ════════════════════════════════════════════════════════════════════
+       ALERTES — remédiatins en retard
+       ════════════════════════════════════════════════════════════════════ -->
+  {% if stats.overdue_remediations %}
+  <div class="db2-alerts">
+    <div class="db2-alert-header">
+      <span class="db2-alert-icon" aria-hidden="true">🔴</span>
+      <span class="db2-alert-title">
+        {{ stats.overdue_remediations | length }}
+        remédiation{% if stats.overdue_remediations | length > 1 %}s{% endif %}
+        en retard
+      </span>
+      <span class="db2-alert-sub">deadline dépassée · non terminée</span>
+    </div>
+    <ul class="db2-alert-list">
+      {% for item in stats.overdue_remediations %}
+      <li class="db2-alert-item">
+        <span class="db2-alert-days">{{ item.days_overdue }}j</span>
+        <div class="db2-alert-info">
+          <span class="db2-alert-tech">{{ item.technique.attack_id }} — {{ item.technique.name }}</span>
+          <span class="db2-alert-camp">{{ item.campaign_name }}</span>
+        </div>
+        <a href="/campaigns/{{ item.campaign_id }}/remediation"
+           class="db2-alert-btn">Voir →</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- ════════════════════════════════════════════════════════════════════
        CORPS PRINCIPAL — campagnes + panneau latéral
        ════════════════════════════════════════════════════════════════════ -->
   <div class="db2-body">
@@ -328,6 +358,9 @@
           </a>
           <a href="/search" class="db2-action-btn">
             <span aria-hidden="true">🔍</span> Recherche globale
+          </a>
+          <a href="/remediation" class="db2-action-btn">
+            <span aria-hidden="true">⚙</span> Remédiation globale
           </a>
           {% if current_user.is_admin %}
           <a href="/admin/users" class="db2-action-btn">

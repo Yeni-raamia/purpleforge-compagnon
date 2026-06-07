@@ -121,7 +121,9 @@ def update_remediation(
     session.add(technique)
     session.commit()
 
-    if board:
+    if board == 2:
+        return RedirectResponse(url="/remediation", status_code=303)
+    if board == 1:
         return RedirectResponse(
             url=f"/campaigns/{campaign_id}/remediation", status_code=303
         )
@@ -131,6 +133,26 @@ def update_remediation(
     )
 
 
+@router.post("/{campaign_id}/techniques/{tech_id}/delete", response_class=HTMLResponse)
+def delete_technique(
+    campaign_id: int,
+    tech_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Supprime définitivement une technique de la campagne.
+
+    Retourne une chaîne vide : HTMX remplace la carte par rien (disparition).
+    """
+    technique = session.get(TechniqueEntry, tech_id)
+    if not technique or technique.campaign_id != campaign_id:
+        return HTMLResponse("", status_code=404)
+
+    session.delete(technique)
+    session.commit()
+    return HTMLResponse("")   # hx-swap="outerHTML" → la carte disparaît
+
+
 @router.post("/{campaign_id}/techniques/{tech_id}", response_class=HTMLResponse)
 def update_technique(
     campaign_id: int,
@@ -138,10 +160,11 @@ def update_technique(
     request: Request,
     status: str = Form(...),
     blue_note: str = Form(""),
+    red_note:  str = Form(""),
     session: Session = Depends(get_session),
     current_user: User = Depends(require_user),
 ):
-    """Met à jour le statut et la note blue team d'une technique.
+    """Met à jour le statut, la note blue team et la note red team d'une technique.
 
     Retourne un fragment HTML (carte mise à jour) remplacé par HTMX.
     """
@@ -154,6 +177,7 @@ def update_technique(
     except ValueError:
         pass
     technique.blue_note = blue_note.strip()
+    technique.red_note  = red_note.strip()
 
     session.add(technique)
     session.commit()

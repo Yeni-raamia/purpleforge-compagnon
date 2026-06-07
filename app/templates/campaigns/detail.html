@@ -1,38 +1,100 @@
 {% extends "base.html" %}
-
 {% block title %}{{ campaign.name }} — PurpleForge Compagnon{% endblock %}
 
 {% block content %}
-<div class="page-wrap">
 
-  <!-- ─── En-tête ────────────────────────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="page-header__left">
-      <a href="/campaigns/" class="btn-back">← Toutes les campagnes</a>
-      <h1 class="page-title">{{ campaign.name }}</h1>
+{% set circ   = 282.74 %}
+{% set offset = (circ * (1 - pct_detecte / 100)) | round(2) %}
+
+<!-- ═══ HERO SOMBRE ════════════════════════════════════════════════════════ -->
+<div class="cd-hero">
+  <div class="cd-orb cd-orb--1" aria-hidden="true"></div>
+  <div class="cd-orb cd-orb--2" aria-hidden="true"></div>
+
+  <div class="cd-hero__inner">
+
+    <!-- Gauche : infos campagne -->
+    <div class="cd-hero__left">
+      <a href="/campaigns/" class="cd-back">← Toutes les campagnes</a>
+      <h1 class="cd-hero__title">{{ campaign.name }}</h1>
+
       {% if campaign.description %}
-      <p class="page-subtitle">{{ campaign.description }}</p>
+      <p class="cd-hero__desc">{{ campaign.description }}</p>
       {% endif %}
-      <p class="page-meta">Créée le {{ campaign.created_at.strftime('%d %B %Y') }}</p>
 
-      <!-- Tags APT / groupes d'attaquants -->
       {% if campaign.tags %}
-      <div class="apt-tags" style="margin-top:.6rem;">
-        {% for tag in campaign.tags.split(',') %}
-        {% set t = tag.strip() %}
-        {% if t %}<span class="apt-tag">{{ t }}</span>{% endif %}
-        {% endfor %}
+      <div class="cd-hero__tags">
+        {% for tag in campaign.tags.split(',') %}{% set t = tag.strip() %}{% if t %}
+        <span class="cd-tag">{{ t }}</span>{% endif %}{% endfor %}
       </div>
       {% endif %}
+
+      <div class="cd-hero__date">
+        📅 Créée le {{ campaign.created_at.strftime('%d %B %Y') }}
+      </div>
+
+      <button class="cd-edit-btn" onclick="toggleEditForm()">✏ Modifier la campagne</button>
     </div>
 
-    <!-- Bouton d'édition -->
-    <div class="page-header__actions">
-      <button class="btn btn--outline" onclick="toggleEditForm()">✏ Modifier</button>
+    <!-- Centre : anneau de détection -->
+    <div class="cd-ring-wrap">
+      <svg class="cd-ring" viewBox="0 0 120 120" aria-label="Taux de détection : {{ pct_detecte }}%">
+        <defs>
+          <linearGradient id="cd-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#4ade80"/>
+            <stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+          <filter id="cd-glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Piste -->
+        <circle cx="60" cy="60" r="45" fill="none"
+          stroke="rgba(255,255,255,.07)" stroke-width="10" stroke-linecap="round"/>
+        <!-- Arc -->
+        <circle cx="60" cy="60" r="45" fill="none"
+          stroke="url(#cd-grad)" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="{{ circ }}" stroke-dashoffset="{{ offset }}"
+          transform="rotate(-90 60 60)" filter="url(#cd-glow)"
+          class="cd-ring__arc"
+          data-target="{{ offset }}" data-circ="{{ circ }}"/>
+        <!-- Texte -->
+        <text x="60" y="56" text-anchor="middle"
+          font-family="Baloo 2, sans-serif" font-size="20" font-weight="800"
+          fill="white">{{ pct_detecte }}%</text>
+        <text x="60" y="71" text-anchor="middle"
+          font-family="Nunito, sans-serif" font-size="8.5" font-weight="600"
+          fill="rgba(255,255,255,.5)">détecté</text>
+      </svg>
     </div>
+
+    <!-- Droite : compteurs par statut -->
+    <div class="cd-stats">
+      <div class="cd-stat cd-stat--d">
+        <div class="cd-stat__icon">✓</div>
+        <div class="cd-stat__nb">{{ counts.detecte }}</div>
+        <div class="cd-stat__lbl">Détectées</div>
+      </div>
+      <div class="cd-stat cd-stat--c">
+        <div class="cd-stat__icon">⚙</div>
+        <div class="cd-stat__nb">{{ counts.a_construire }}</div>
+        <div class="cd-stat__lbl">À construire</div>
+      </div>
+      <div class="cd-stat cd-stat--n">
+        <div class="cd-stat__icon">✗</div>
+        <div class="cd-stat__nb">{{ counts.non_detecte }}</div>
+        <div class="cd-stat__lbl">Non détectées</div>
+      </div>
+    </div>
+
   </div>
+</div>
 
-  <!-- ─── Formulaire d'édition (masqué par défaut) ─────────────────────── -->
+<!-- ═══ CONTENU ════════════════════════════════════════════════════════════ -->
+<div class="page-wrap" style="margin-top:0;">
+
+  <!-- ─── Panneau d'édition (masqué par défaut) ──────────────────────── -->
   <div class="edit-panel" id="edit-panel" style="display:none;">
     <h2 class="edit-panel__title">Modifier la campagne</h2>
     <form method="post" action="/campaigns/{{ campaign.id }}/edit" class="edit-form">
@@ -51,12 +113,11 @@
 
       <div class="form-group">
         <label for="edit-tags">
-          Groupes d'attaquants (tags)
+          Groupes d'attaquants
           <span style="font-weight:400; color:var(--gris); font-size:.8rem;">— séparés par des virgules</span>
         </label>
         <input class="form-control" type="text" id="edit-tags" name="tags"
-          value="{{ campaign.tags }}"
-          placeholder="ex : APT28, Lazarus, FIN7"
+          value="{{ campaign.tags }}" placeholder="ex : APT28, Lazarus, FIN7"
           list="apt-list">
         <datalist id="apt-list">
           <option value="APT28"><option value="APT29"><option value="APT41">
@@ -73,43 +134,55 @@
         <button type="button" class="btn btn--outline" onclick="toggleEditForm()">Annuler</button>
       </div>
     </form>
+
+    <!-- Zone de danger -->
+    <div class="danger-zone">
+      <div class="danger-zone__label">⚠ Zone de danger</div>
+      <div class="danger-zone__row">
+        <div>
+          <strong>Supprimer cette campagne</strong>
+          <p class="danger-zone__hint">
+            Supprime définitivement la campagne et ses
+            <strong>{{ total }}</strong> technique{% if total > 1 %}s{% endif %}.
+            Action irréversible.
+          </p>
+        </div>
+        <form method="post" action="/campaigns/{{ campaign.id }}/delete"
+              onsubmit="return confirm('Supprimer « {{ campaign.name }} » et toutes ses techniques ?\n\nCette action est IRRÉVERSIBLE.');">
+          <button type="submit" class="btn btn--danger">🗑 Supprimer</button>
+        </form>
+      </div>
+    </div>
   </div>
 
   <!-- ─── Boutons d'action ──────────────────────────────────────────────── -->
-  <div class="campaign-actions">
+  <div class="cd-actions">
     <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary">
-      Ouvrir la matrice ATT&CK →
+      Matrice ATT&amp;CK →
     </a>
     <a href="/campaigns/{{ campaign.id }}/coverage" class="btn btn--secondary">
-      Voir la couverture
+      Couverture
     </a>
     <a href="/campaigns/{{ campaign.id }}/remediation" class="btn btn--secondary">
       ⚙ Remédiation
     </a>
     <a href="/campaigns/{{ campaign.id }}/print" class="btn btn--secondary" target="_blank">
-      🖨️ Rapport PDF
+      🖨 Rapport PDF
     </a>
-
-    <!-- Exports -->
+    <div class="cd-actions__sep"></div>
     <a href="/campaigns/{{ campaign.id }}/export/json" class="btn btn--outline" download
-       title="Export réimportable dans PurpleForge">
-      ⬇ JSON PurpleForge
-    </a>
+       title="Export réimportable dans PurpleForge">⬇ JSON PurpleForge</a>
     <a href="/campaigns/{{ campaign.id }}/export/csv" class="btn btn--outline" download
-       title="Export tableur (Excel, Calc…)">
-      ⬇ CSV
-    </a>
+       title="Export tableur (Excel, Calc…)">⬇ CSV</a>
     <a href="/campaigns/{{ campaign.id }}/export" class="btn btn--outline" download
-       title="Export pour ATT&CK Navigator">
-      ⬇ Navigator JSON
-    </a>
+       title="Export pour ATT&CK Navigator">⬇ Navigator JSON</a>
   </div>
 
-  <!-- ─── Techniques ───────────────────────────────────────────────────── -->
+  <!-- ─── Liste des techniques ─────────────────────────────────────────── -->
   <section>
     <h2 class="section-title">
       Techniques jouées
-      <span class="count-badge">{{ techniques | length }}</span>
+      <span class="count-badge">{{ total }}</span>
     </h2>
 
     {% if techniques %}
@@ -124,7 +197,7 @@
     <div class="empty-state">
       <p>Aucune technique ajoutée à cette campagne.</p>
       <a href="/campaigns/{{ campaign.id }}/matrix" class="btn btn--primary" style="margin-top:1rem;">
-        Ouvrir la matrice ATT&CK →
+        Ouvrir la matrice ATT&amp;CK →
       </a>
     </div>
     {% endif %}
@@ -137,5 +210,21 @@ function toggleEditForm() {
   const panel = document.getElementById('edit-panel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
+
+/* Animation du ring au chargement */
+(function () {
+  const arc = document.querySelector('.cd-ring__arc');
+  if (!arc) return;
+  const circ   = parseFloat(arc.dataset.circ);
+  const target = parseFloat(arc.dataset.target);
+  arc.style.strokeDashoffset = circ;
+  requestAnimationFrame(function () {
+    setTimeout(function () {
+      arc.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+      arc.style.strokeDashoffset = target;
+    }, 120);
+  });
+})();
 </script>
+
 {% endblock %}

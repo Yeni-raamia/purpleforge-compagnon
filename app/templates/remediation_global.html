@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Remédiation globale — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+
+{% set nb_cours   = board.en_cours | length %}
+{% set nb_bloque  = board.bloque   | length %}
+{% set nb_termine = board.termine  | length %}
+{% set circ   = 282.74 %}
+{% set offset = (circ * (1 - pct_done / 100)) | round(2) %}
+
+<!-- ═══ HERO SOMBRE ════════════════════════════════════════════════════════ -->
+<div class="rmd2-hero">
+
+  <div class="rmd2-orb rmd2-orb--1"></div>
+  <div class="rmd2-orb rmd2-orb--2"></div>
+
+  <div class="rmd2-hero__inner">
+
+    <!-- Titre + lien retour -->
+    <div class="rmd2-hero__left">
+      <a href="/dashboard" class="rmd2-back">← Dashboard</a>
+      <h1 class="rmd2-hero__title">Remédiation globale</h1>
+      <p class="rmd2-hero__sub">
+        {{ total }} technique{% if total > 1 %}s{% endif %} ·
+        {{ nb_camps }} campagne{% if nb_camps > 1 %}s{% endif %} actives
+      </p>
+
+      <!-- Barre de progression -->
+      <div class="rmd2-progress">
+        <div class="rmd2-progress__track">
+          <div class="rmd2-progress__fill" style="width:{{ pct_done }}%;"></div>
+        </div>
+        <span class="rmd2-progress__label">{{ pct_done }}% terminé</span>
+      </div>
+    </div>
+
+    <!-- Anneau SVG -->
+    <div class="rmd2-ring-wrap">
+      <svg class="rmd2-ring" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <linearGradient id="rmdg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#34d399"/>
+            <stop offset="100%" stop-color="#059669"/>
+          </linearGradient>
+          <filter id="rmdg-glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="60" cy="60" r="45"
+          fill="none" stroke="rgba(255,255,255,.07)"
+          stroke-width="10" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="45"
+          fill="none" stroke="url(#rmdg-grad)"
+          stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="{{ circ }}"
+          stroke-dashoffset="{{ offset }}"
+          transform="rotate(-90 60 60)"
+          filter="url(#rmdg-glow)"
+          class="rmdg-arc"
+          data-target="{{ offset }}" data-circ="{{ circ }}"/>
+        <text x="60" y="56" text-anchor="middle"
+          font-family="Baloo 2, sans-serif" font-size="20" font-weight="800"
+          fill="white">{{ pct_done }}%</text>
+        <text x="60" y="71" text-anchor="middle"
+          font-family="Nunito, sans-serif" font-size="8.5" font-weight="600"
+          fill="rgba(255,255,255,.55)">terminé</text>
+      </svg>
+    </div>
+
+    <!-- Stats 3 colonnes -->
+    <div class="rmd2-stats">
+      <div class="rmd2-stat rmd2-stat--cours">
+        <div class="rmd2-stat__icon">🔧</div>
+        <div class="rmd2-stat__nb">{{ nb_cours }}</div>
+        <div class="rmd2-stat__lbl">En cours</div>
+      </div>
+      <div class="rmd2-stat rmd2-stat--bloque">
+        <div class="rmd2-stat__icon">🚫</div>
+        <div class="rmd2-stat__nb">{{ nb_bloque }}</div>
+        <div class="rmd2-stat__lbl">Bloqué</div>
+      </div>
+      <div class="rmd2-stat rmd2-stat--termine">
+        <div class="rmd2-stat__icon">✓</div>
+        <div class="rmd2-stat__nb">{{ nb_termine }}</div>
+        <div class="rmd2-stat__lbl">Terminé</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ CONTENU ════════════════════════════════════════════════════════════ -->
+<div class="page-wrap" style="margin-top:0;">
+
+  {% if total == 0 %}
+  <div class="empty-state" style="margin-top:3rem;">
+    <p style="font-size:2rem;">🎉</p>
+    <p>Aucune technique « À construire » dans aucune campagne !</p>
+    <a href="/campaigns/" class="btn btn--primary" style="margin-top:1rem;">
+      ← Voir les campagnes
+    </a>
+  </div>
+
+  {% else %}
+
+  <!-- Board Kanban global -->
+  <div class="rmd2-board">
+
+    {# ══ EN COURS ══ #}
+    <div class="rmd2-col rmd2-col--cours">
+      <div class="rmd2-col__head">
+        <span class="rmd2-col__dot rmd2-col__dot--cours"></span>
+        <span class="rmd2-col__title">En cours</span>
+        <span class="rmd2-col__badge">{{ nb_cours }}</span>
+      </div>
+
+      {% if board.en_cours %}
+      {% for t in board.en_cours %}
+      {% set camp = camp_by_id.get(t.campaign_id) %}
+      <div class="rmd2-card rmd2-card--cours">
+        <div class="rmd2-card__accent rmd2-card__accent--cours"></div>
+        <div class="rmd2-card__body">
+
+          <!-- Badge campagne -->
+          {% if camp %}
+          <a href="/campaigns/{{ camp.id }}/remediation"
+             class="rmdg-camp-badge" title="Voir la remédiation de cette campagne">
+            🗂 {{ camp.name }}
+          </a>
+          {% endif %}
+
+          <div class="rmd2-card__ids">
+            <span class="rmd2-card__id">{{ t.attack_id }}</span>
+            <span class="rmd2-card__tactic">{{ t.tactic | replace('-',' ') | title }}</span>
+          </div>
+          <div class="rmd2-card__name">{{ t.name }}</div>
+
+          {% if t.remediation_assignee or t.remediation_deadline %}
+          <div class="rmd2-card__meta">
+            {% if t.remediation_assignee %}
+            <span class="rmd2-card__pill rmd2-card__pill--user">
+              <span class="rmd2-card__avatar">{{ t.remediation_assignee[0] | upper }}</span>
+              {{ t.remediation_assignee }}
+            </span>
+            {% endif %}
+            {% if t.remediation_deadline %}
+            <span class="rmd2-card__pill {% if t.remediation_deadline < today %}rmd2-card__pill--overdue{% elif t.remediation_deadline == today %}rmd2-card__pill--today{% else %}rmd2-card__pill--date{% endif %}">
+              📅 {{ t.remediation_deadline }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="rmd2-card__footer">
+            <form method="post"
+                  action="/campaigns/{{ t.campaign_id }}/techniques/{{ t.id }}/remediation?board=2"
+                  class="rmd2-card__form">
+              <input type="hidden" name="assignee" value="{{ t.remediation_assignee }}">
+              <input type="hidden" name="deadline" value="{{ t.remediation_deadline }}">
+              <select name="remed_status" class="rmd2-card__select rmd2-card__select--cours"
+                      onchange="this.form.submit()">
+                <option value="en_cours" selected>🔧 En cours</option>
+                <option value="bloque">🚫 Déplacer → Bloqué</option>
+                <option value="termine">✓ Déplacer → Terminé</option>
+              </select>
+            </form>
+            <a href="/campaigns/{{ t.campaign_id }}#tech-{{ t.id }}" class="rmd2-card__edit">
+              Éditer →
+            </a>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="rmd2-col__empty">Aucune technique en cours</div>
+      {% endif %}
+    </div>
+
+    {# ══ BLOQUÉ ══ #}
+    <div class="rmd2-col rmd2-col--bloque">
+      <div class="rmd2-col__head">
+        <span class="rmd2-col__dot rmd2-col__dot--bloque"></span>
+        <span class="rmd2-col__title">Bloqué</span>
+        <span class="rmd2-col__badge">{{ nb_bloque }}</span>
+      </div>
+
+      {% if board.bloque %}
+      {% for t in board.bloque %}
+      {% set camp = camp_by_id.get(t.campaign_id) %}
+      <div class="rmd2-card rmd2-card--bloque">
+        <div class="rmd2-card__accent rmd2-card__accent--bloque"></div>
+        <div class="rmd2-card__body">
+
+          {% if camp %}
+          <a href="/campaigns/{{ camp.id }}/remediation"
+             class="rmdg-camp-badge" title="Voir la remédiation de cette campagne">
+            🗂 {{ camp.name }}
+          </a>
+          {% endif %}
+
+          <div class="rmd2-card__ids">
+            <span class="rmd2-card__id">{{ t.attack_id }}</span>
+            <span class="rmd2-card__tactic">{{ t.tactic | replace('-',' ') | title }}</span>
+          </div>
+          <div class="rmd2-card__name">{{ t.name }}</div>
+
+          {% if t.remediation_assignee or t.remediation_deadline %}
+          <div class="rmd2-card__meta">
+            {% if t.remediation_assignee %}
+            <span class="rmd2-card__pill rmd2-card__pill--user">
+              <span class="rmd2-card__avatar">{{ t.remediation_assignee[0] | upper }}</span>
+              {{ t.remediation_assignee }}
+            </span>
+            {% endif %}
+            {% if t.remediation_deadline %}
+            <span class="rmd2-card__pill {% if t.remediation_deadline < today %}rmd2-card__pill--overdue{% else %}rmd2-card__pill--date{% endif %}">
+              📅 {{ t.remediation_deadline }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="rmd2-card__footer">
+            <form method="post"
+                  action="/campaigns/{{ t.campaign_id }}/techniques/{{ t.id }}/remediation?board=2"
+                  class="rmd2-card__form">
+              <input type="hidden" name="assignee" value="{{ t.remediation_assignee }}">
+              <input type="hidden" name="deadline" value="{{ t.remediation_deadline }}">
+              <select name="remed_status" class="rmd2-card__select rmd2-card__select--bloque"
+                      onchange="this.form.submit()">
+                <option value="en_cours">🔧 Déplacer → En cours</option>
+                <option value="bloque" selected>🚫 Bloqué</option>
+                <option value="termine">✓ Déplacer → Terminé</option>
+              </select>
+            </form>
+            <a href="/campaigns/{{ t.campaign_id }}#tech-{{ t.id }}" class="rmd2-card__edit">
+              Éditer →
+            </a>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="rmd2-col__empty">Aucune technique bloquée</div>
+      {% endif %}
+    </div>
+
+    {# ══ TERMINÉ ══ #}
+    <div class="rmd2-col rmd2-col--termine">
+      <div class="rmd2-col__head">
+        <span class="rmd2-col__dot rmd2-col__dot--termine"></span>
+        <span class="rmd2-col__title">Terminé</span>
+        <span class="rmd2-col__badge">{{ nb_termine }}</span>
+      </div>
+
+      {% if board.termine %}
+      {% for t in board.termine %}
+      {% set camp = camp_by_id.get(t.campaign_id) %}
+      <div class="rmd2-card rmd2-card--termine">
+        <div class="rmd2-card__accent rmd2-card__accent--termine"></div>
+        <div class="rmd2-card__body">
+
+          {% if camp %}
+          <a href="/campaigns/{{ camp.id }}/remediation"
+             class="rmdg-camp-badge rmdg-camp-badge--done" title="Voir la remédiation de cette campagne">
+            🗂 {{ camp.name }}
+          </a>
+          {% endif %}
+
+          <div class="rmd2-card__ids">
+            <span class="rmd2-card__id">{{ t.attack_id }}</span>
+            <span class="rmd2-card__tactic">{{ t.tactic | replace('-',' ') | title }}</span>
+          </div>
+          <div class="rmd2-card__name rmd2-card__name--done">{{ t.name }}</div>
+
+          {% if t.remediation_assignee or t.remediation_deadline %}
+          <div class="rmd2-card__meta">
+            {% if t.remediation_assignee %}
+            <span class="rmd2-card__pill rmd2-card__pill--user">
+              <span class="rmd2-card__avatar">{{ t.remediation_assignee[0] | upper }}</span>
+              {{ t.remediation_assignee }}
+            </span>
+            {% endif %}
+            {% if t.remediation_deadline %}
+            <span class="rmd2-card__pill rmd2-card__pill--date">
+              📅 {{ t.remediation_deadline }}
+            </span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="rmd2-card__footer">
+            <form method="post"
+                  action="/campaigns/{{ t.campaign_id }}/techniques/{{ t.id }}/remediation?board=2"
+                  class="rmd2-card__form">
+              <input type="hidden" name="assignee" value="{{ t.remediation_assignee }}">
+              <input type="hidden" name="deadline" value="{{ t.remediation_deadline }}">
+              <select name="remed_status" class="rmd2-card__select rmd2-card__select--termine"
+                      onchange="this.form.submit()">
+                <option value="en_cours">🔧 Déplacer → En cours</option>
+                <option value="bloque">🚫 Déplacer → Bloqué</option>
+                <option value="termine" selected>✓ Terminé</option>
+              </select>
+            </form>
+            <a href="/campaigns/{{ t.campaign_id }}#tech-{{ t.id }}" class="rmd2-card__edit">
+              Éditer →
+            </a>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="rmd2-col__empty">Aucune technique terminée</div>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+(function () {
+  const arc = document.querySelector('.rmdg-arc');
+  if (!arc) return;
+  const circ   = parseFloat(arc.dataset.circ);
+  const target = parseFloat(arc.dataset.target);
+  arc.style.strokeDashoffset = circ;
+  requestAnimationFrame(function () {
+    setTimeout(function () {
+      arc.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+      arc.style.strokeDashoffset = target;
+    }, 120);
+  });
+})();
+</script>
+
+{% endblock %}

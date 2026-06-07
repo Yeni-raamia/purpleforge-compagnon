@@ -35,6 +35,13 @@ def _run_migrations() -> None:
         except sqlite3.OperationalError:
             pass   # colonne déjà présente
 
+        # Colonne red_note (note confidentielle de la red team)
+        try:
+            conn.execute("ALTER TABLE techniqueentry ADD COLUMN red_note TEXT DEFAULT ''")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass   # colonne déjà présente
+
         # Phase 13 — colonnes de remédiation sur TechniqueEntry
         for col, default in [
             ("remediation_assignee", "''"),

@@ -61,10 +61,38 @@ def list_campaigns(
     campaigns = session.exec(
         select(Campaign).order_by(Campaign.created_at.desc())
     ).all()
+
+    # Stats par campagne pour les mini-rings et les pills
+    all_techs = session.exec(select(TechniqueEntry)).all()
+    tech_by_camp: dict[int, list] = {}
+    for t in all_techs:
+        tech_by_camp.setdefault(t.campaign_id, []).append(t)
+
+    campaigns_stats = []
+    for c in campaigns:
+        techs = tech_by_camp.get(c.id, [])
+        total = len(techs)
+        counts = {"detecte": 0, "a_construire": 0, "non_detecte": 0}
+        for t in techs:
+            counts[t.status.value] = counts.get(t.status.value, 0) + 1
+        pct = round(counts["detecte"] * 100 / total) if total > 0 else 0
+        campaigns_stats.append({
+            "campaign":    c,
+            "total":       total,
+            "counts":      counts,
+            "pct_detecte": pct,
+        })
+
     return templates.TemplateResponse(
         request,
         "campaigns/list.html",
-        {"campaigns": campaigns, "current_user": current_user},
+        {
+            "campaigns":       campaigns,
+            "campaigns_stats": campaigns_stats,
+            "nb_campaigns":    len(campaigns),
+            "nb_techniques":   len(all_techs),
+            "current_user":    current_user,
+        },
     )
 
 
@@ -371,10 +399,24 @@ def campaign_detail(
         .order_by(TechniqueEntry.played_at.desc())
     ).all()
 
+    # Stats pour le hero de la page détail
+    total = len(techniques)
+    counts = {"detecte": 0, "a_construire": 0, "non_detecte": 0}
+    for t in techniques:
+        counts[t.status.value] = counts.get(t.status.value, 0) + 1
+    pct_detecte = round(counts["detecte"] * 100 / total) if total > 0 else 0
+
     return templates.TemplateResponse(
         request,
         "campaigns/detail.html",
-        {"campaign": campaign, "techniques": techniques, "current_user": current_user},
+        {
+            "campaign":    campaign,
+            "techniques":  techniques,
+            "total":       total,
+            "counts":      counts,
+            "pct_detecte": pct_detecte,
+            "current_user": current_user,
+        },
     )
 
 
@@ -721,6 +763,33 @@ def edit_campaign(
     session.commit()
 
     return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
+
+
+@router.post("/{campaign_id}/delete", response_class=HTMLResponse)
+def delete_campaign(
+    campaign_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Supprime définitivement une campagne et toutes ses techniques.
+
+    Redirige vers la liste des campagnes après suppression.
+    """
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return RedirectResponse(url="/campaigns/", status_code=303)
+
+    # Supprimer d'abord toutes les techniques liées (intégrité référentielle)
+    techniques = session.exec(
+        select(TechniqueEntry).where(TechniqueEntry.campaign_id == campaign_id)
+    ).all()
+    for t in techniques:
+        session.delete(t)
+
+    session.delete(campaign)
+    session.commit()
+
+    return RedirectResponse(url="/campaigns/", status_code=303)
 
 
 @router.get("/{campaign_id}/print", response_class=HTMLResponse)

@@ -6,6 +6,7 @@ Agrège les données de toutes les campagnes pour la vue d'ensemble :
 - Tactiques les plus jouées
 """
 
+from datetime import date
 from sqlmodel import Session, select
 
 from app.models.campaign import Campaign
@@ -92,11 +93,38 @@ def compute_dashboard(session: Session) -> dict:
         reverse=True,
     )[:6]  # Top 6
 
+    # ── Remédiatins en retard (deadline dépassée, pas encore terminée) ────
+    today_iso = date.today().isoformat()
+    camp_by_id = {c.id: c for c in campaigns}   # accès O(1)
+    overdue = []
+    for t in all_techniques:
+        if (
+            t.status.value == "a_construire"
+            and t.remediation_deadline
+            and t.remediation_deadline < today_iso
+            and t.remediation_status != "termine"
+        ):
+            camp = camp_by_id.get(t.campaign_id)
+            try:
+                days = (date.today() - date.fromisoformat(t.remediation_deadline)).days
+            except ValueError:
+                days = 0
+            overdue.append({
+                "technique":     t,
+                "campaign_name": camp.name if camp else "?",
+                "campaign_id":   t.campaign_id,
+                "days_overdue":  days,
+            })
+
+    # Les plus en retard en premier
+    overdue.sort(key=lambda x: x["days_overdue"], reverse=True)
+
     return {
-        "nb_campaigns":       len(campaigns),
-        "nb_techniques":      nb_total,
-        "global_pct_detecte": global_pct,
-        "global_counts":      global_counts,
-        "campaigns":          campaigns_summary,
-        "top_tactics":        top_tactics,
+        "nb_campaigns":          len(campaigns),
+        "nb_techniques":         nb_total,
+        "global_pct_detecte":    global_pct,
+        "global_counts":         global_counts,
+        "campaigns":             campaigns_summary,
+        "top_tactics":           top_tactics,
+        "overdue_remediations":  overdue[:10],   # max 10 alertes
     }
