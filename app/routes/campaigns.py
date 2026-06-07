@@ -8,7 +8,7 @@ pour afficher son nom dans la navigation.
 import csv
 import io
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -684,7 +684,7 @@ def campaign_export_json(
 
     payload = {
         "purpleforge_version": "1",
-        "exported_at": datetime.utcnow().isoformat() + "Z",
+        "exported_at": datetime.now(timezone.utc).isoformat(),
         "campaign": {
             "name":        campaign.name,
             "description": campaign.description or "",
@@ -862,7 +862,7 @@ def print_remediation(
             "nb_termine": nb_termine,
             "pct_done":   pct_done,
             "today":      today,
-            "now":        datetime.utcnow().strftime("%d/%m/%Y à %H:%M UTC"),
+            "now":        datetime.now(timezone.utc).strftime("%d/%m/%Y à %H:%M UTC"),
             "global":     False,
             "camp_by_id": {},
         },
@@ -948,7 +948,7 @@ def campaign_print(
                 "techniques": techs,
             })
 
-    now = datetime.utcnow().strftime("%d/%m/%Y à %H:%M UTC")
+    now = datetime.now(timezone.utc).strftime("%d/%m/%Y à %H:%M UTC")
 
     return templates.TemplateResponse(
         request,

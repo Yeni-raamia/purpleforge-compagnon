@@ -6,7 +6,7 @@ GET /remediation → board kanban global de toutes les techniques « à construi
 
 import csv
 import io
-from datetime import date as _date, datetime
+from datetime import date as _date, datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, Response
@@ -176,7 +176,7 @@ def global_remediation_print(
             "nb_termine": nb_termine,
             "pct_done":   pct_done,
             "today":      _date.today().isoformat(),
-            "now":        datetime.utcnow().strftime("%d/%m/%Y à %H:%M UTC"),
+            "now":        datetime.now(timezone.utc).strftime("%d/%m/%Y à %H:%M UTC"),
             "global":     True,
         },
     )
