@@ -6159,6 +6159,152 @@ select.form-control { cursor: pointer; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   BARRE DE FILTRES — boards de remédiation (rmd-filters)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.rmd-filters {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: .9rem 0 1.1rem;
+  border-bottom: 1px solid var(--bordure);
+  margin-bottom: 1.2rem;
+}
+
+.rmd-filter {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+
+.rmd-filter__lbl {
+  font-size: .75rem;
+  font-weight: 800;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+.rmd-filter__sel {
+  font-size: .82rem;
+  font-family: var(--font-corps);
+  font-weight: 600;
+  padding: .35rem .7rem;
+  border: 1px solid var(--bordure);
+  border-radius: 20px;
+  background: var(--blanc);
+  color: var(--texte);
+  cursor: pointer;
+  transition: border-color .15s;
+  max-width: 200px;
+}
+
+.rmd-filter__sel:focus {
+  border-color: var(--vn-clair);
+  outline: none;
+}
+
+.rmd-filter__chips {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+
+.rmd-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: .3rem .75rem;
+  border: 1px solid var(--bordure);
+  border-radius: 20px;
+  background: var(--blanc);
+  color: var(--gris);
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.rmd-chip:hover {
+  background: var(--vn-pale);
+  border-color: var(--vn-clair);
+  color: var(--vn-vif);
+}
+
+.rmd-chip--active {
+  background: var(--vn-vif);
+  border-color: var(--vn-vif);
+  color: #fff;
+}
+
+.rmd-chip--active:hover {
+  background: var(--vn-clair);
+  border-color: var(--vn-clair);
+  color: #fff;
+}
+
+.rmd-filter__reset {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .35rem .85rem;
+  border: 1px solid rgba(239,68,68,.3);
+  border-radius: 20px;
+  background: transparent;
+  color: #ef4444;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.rmd-filter__reset:hover {
+  background: rgba(239,68,68,.08);
+  border-color: #ef4444;
+}
+
+@media (max-width: 640px) {
+  .rmd-filters {
+    gap: .75rem;
+  }
+  .rmd-filter__reset {
+    margin-left: 0;
+  }
+}
+
+/* ─── Boutons d'export dans le hero remédiation ──────────────────────── */
+.rmd2-exports {
+  display: flex;
+  gap: .5rem;
+  margin-top: .8rem;
+  flex-wrap: wrap;
+}
+
+.rmd2-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .38rem .9rem;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 20px;
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.75);
+  font-size: .78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background .16s, border-color .16s, color .16s;
+}
+
+.rmd2-export-btn:hover {
+  background: rgba(255,255,255,.15);
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    BADGE CAMPAGNE — board de remédiation global (rmdg-*)
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -6196,4 +6342,176 @@ select.form-control { cursor: pointer; }
 .rmdg-camp-badge--done:hover {
   background: rgba(255,255,255,.1);
   border-color: rgba(255,255,255,.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOGGLE CARTES / TABLEAU DENSE — page détail campagne
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Rangée titre section + bouton toggle ────────────────────────────── */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.tc-view-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .4rem 1rem;
+  border: 1px solid var(--bordure);
+  border-radius: 20px;
+  background: var(--blanc);
+  color: var(--gris);
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .16s, border-color .16s, color .16s;
+}
+
+.tc-view-toggle:hover {
+  background: var(--vn-pale);
+  border-color: var(--vn-clair);
+  color: var(--vn-vif);
+}
+
+/* ── En-tête colonnes tableau (masqué par défaut) ────────────────────── */
+.tc-dense-hd {
+  display: none;   /* affiché via JS en mode dense */
+  align-items: center;
+  gap: .75rem;
+  padding: .45rem 1.25rem;
+  background: var(--vn-pale);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  margin-bottom: .35rem;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--vn-vif);
+}
+
+.tc-dense-hd__col--id     { width: 80px;  flex-shrink: 0; }
+.tc-dense-hd__col--name   { flex: 1;      min-width: 0; }
+.tc-dense-hd__col--tactic { width: 150px; flex-shrink: 0; }
+.tc-dense-hd__col--status { width: 155px; flex-shrink: 0; }
+.tc-dense-hd__col--action { width: 56px;  flex-shrink: 0; }
+
+/* ── Formulaire rapide (caché en vue cartes) ─────────────────────────── */
+.tc-quick-form {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tc-quick-select {
+  font-size: .78rem;
+  font-family: var(--font-corps);
+  font-weight: 600;
+  padding: .3rem .55rem;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  background: var(--blanc);
+  color: var(--texte);
+  cursor: pointer;
+  transition: border-color .15s;
+  max-width: 155px;
+}
+
+.tc-quick-select:focus {
+  border-color: var(--vn-clair);
+  outline: none;
+}
+
+/* ── MODE DENSE — transformations globales ───────────────────────────── */
+
+/* Espace entre les cartes réduit */
+.technique-list--dense {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+/* La carte devient une ligne compacte */
+.technique-list--dense .technique-card {
+  border-radius: 10px;
+  overflow: visible;
+}
+
+/* L'en-tête occupe toute la carte (plus de bordure bas) */
+.technique-list--dense .technique-card__header {
+  border-bottom: none;
+  padding: .5rem 1rem;
+  border-radius: 10px;
+  gap: .75rem;
+}
+
+/* Le corps disparaît entièrement */
+.technique-list--dense .technique-card__body {
+  display: none;
+}
+
+/* Le badge de statut est remplacé par le select inline */
+.technique-list--dense .status-badge {
+  display: none;
+}
+
+/* Le nom de la technique ne se réduit pas, tronqué si trop long */
+.technique-list--dense .technique-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: .88rem;
+}
+
+/* La tactic tag ne rétrécit pas */
+.technique-list--dense .tactic-tag {
+  flex-shrink: 0;
+  width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Afficher le formulaire rapide */
+.technique-list--dense .tc-quick-form {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* L'attack-id reste fixe */
+.technique-list--dense .attack-id {
+  flex-shrink: 0;
+  width: 80px;
+  text-align: center;
+}
+
+/* Le bouton delete reste à droite */
+.technique-list--dense .tc-delete-btn {
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
+/* Animation de transition */
+.technique-card__body {
+  transition: opacity .2s;
+}
+
+@media (max-width: 768px) {
+  .tc-dense-hd { display: none !important; }
+  .technique-list--dense .technique-card__header {
+    flex-wrap: wrap;
+  }
+  .technique-list--dense .technique-name {
+    order: -1;
+    width: 100%;
+    white-space: normal;
+  }
 }

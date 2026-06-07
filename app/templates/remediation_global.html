@@ -34,6 +34,14 @@
         </div>
         <span class="rmd2-progress__label">{{ pct_done }}% terminé</span>
       </div>
+
+      <!-- Exports -->
+      <div class="rmd2-exports">
+        <a href="/remediation/export/csv"
+           class="rmd2-export-btn" download>⬇ CSV</a>
+        <a href="/remediation/print"
+           class="rmd2-export-btn" target="_blank">🖨 PDF</a>
+      </div>
     </div>
 
     <!-- Anneau SVG -->
@@ -105,6 +113,42 @@
   </div>
 
   {% else %}
+
+  <!-- ── Barre de filtres ──────────────────────────────────────────── -->
+  <div class="rmd-filters" id="rmd-filters">
+
+    <div class="rmd-filter">
+      <label class="rmd-filter__lbl">🗂 Campagne</label>
+      <select class="rmd-filter__sel" id="f-campaign" onchange="applyFilters()">
+        <option value="">Toutes</option>
+        {% for cid, camp in camp_by_id.items() %}
+        <option value="{{ camp.name }}">{{ camp.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="rmd-filter">
+      <label class="rmd-filter__lbl">👤 Responsable</label>
+      <select class="rmd-filter__sel" id="f-assignee" onchange="applyFilters()">
+        <option value="">Tous</option>
+      </select>
+    </div>
+
+    <div class="rmd-filter">
+      <label class="rmd-filter__lbl">📅 Deadline</label>
+      <div class="rmd-filter__chips">
+        <button class="rmd-chip rmd-chip--active" data-dl="all"     onclick="setDlFilter(this,'all')">Toutes</button>
+        <button class="rmd-chip"                  data-dl="overdue" onclick="setDlFilter(this,'overdue')">En retard</button>
+        <button class="rmd-chip"                  data-dl="week"    onclick="setDlFilter(this,'week')">Cette semaine</button>
+        <button class="rmd-chip"                  data-dl="none"    onclick="setDlFilter(this,'none')">Sans deadline</button>
+      </div>
+    </div>
+
+    <button class="rmd-filter__reset" onclick="resetFilters()" id="f-reset" style="display:none;">
+      ✕ Réinitialiser
+    </button>
+
+  </div>
 
   <!-- Board Kanban global -->
   <div class="rmd2-board">
@@ -326,6 +370,7 @@
 </div>
 
 <script>
+/* ── Animation anneau ────────────────────────────────────────────────── */
 (function () {
   const arc = document.querySelector('.rmdg-arc');
   if (!arc) return;
@@ -339,6 +384,87 @@
     }, 120);
   });
 })();
+
+/* ── Filtres board global ────────────────────────────────────────────── */
+(function () {
+  const assignees = new Set();
+  document.querySelectorAll('.rmd2-card').forEach(function (card) {
+    const pill = card.querySelector('.rmd2-card__pill--user');
+    if (pill) assignees.add(pill.textContent.trim().replace(/^.\s*/, ''));
+  });
+  const sel = document.getElementById('f-assignee');
+  if (sel) {
+    assignees.forEach(function (a) {
+      const opt = document.createElement('option');
+      opt.value = a; opt.textContent = a;
+      sel.appendChild(opt);
+    });
+  }
+})();
+
+var _dlFilter = 'all';
+
+function setDlFilter(btn, val) {
+  _dlFilter = val;
+  document.querySelectorAll('.rmd-chip').forEach(function (b) { b.classList.remove('rmd-chip--active'); });
+  btn.classList.add('rmd-chip--active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const campaign = (document.getElementById('f-campaign') || {}).value || '';
+  const assignee = (document.getElementById('f-assignee') || {}).value || '';
+  const today   = '{{ today }}';
+  const weekEnd = (function () {
+    const d = new Date(); d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0,10);
+  })();
+
+  const anyActive = campaign || assignee || _dlFilter !== 'all';
+  document.getElementById('f-reset').style.display = anyActive ? 'inline-flex' : 'none';
+
+  document.querySelectorAll('.rmd2-card').forEach(function (card) {
+    const campBadge  = card.querySelector('.rmdg-camp-badge');
+    const pill       = card.querySelector('.rmd2-card__pill--user');
+    const dlPill     = card.querySelector('[class*="rmd2-card__pill--date"],[class*="rmd2-card__pill--overdue"],[class*="rmd2-card__pill--today"]');
+    const cardCamp   = campBadge ? campBadge.textContent.trim().replace(/^🗂\s*/, '') : '';
+    const cardAssign = pill ? pill.textContent.trim().replace(/^.\s*/, '') : '';
+    const cardDl     = dlPill ? dlPill.textContent.trim().replace(/📅\s*/, '') : '';
+
+    let show = true;
+    if (campaign && cardCamp !== campaign)   show = false;
+    if (assignee && cardAssign !== assignee) show = false;
+    if (_dlFilter === 'overdue') show = show && !!cardDl && cardDl < today;
+    if (_dlFilter === 'week')    show = show && !!cardDl && cardDl >= today && cardDl <= weekEnd;
+    if (_dlFilter === 'none')    show = show && !cardDl;
+
+    card.style.display = show ? '' : 'none';
+  });
+
+  document.querySelectorAll('.rmd2-col').forEach(function (col) {
+    const visibles = col.querySelectorAll('.rmd2-card:not([style*="display: none"])');
+    let msg = col.querySelector('.rmd-filter-empty');
+    if (visibles.length === 0) {
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.className = 'rmd2-col__empty rmd-filter-empty';
+        msg.textContent = 'Aucun résultat pour ce filtre';
+        col.appendChild(msg);
+      }
+      msg.style.display = '';
+    } else if (msg) {
+      msg.style.display = 'none';
+    }
+  });
+}
+
+function resetFilters() {
+  const sc = document.getElementById('f-campaign');
+  const sa = document.getElementById('f-assignee');
+  if (sc) sc.value = '';
+  if (sa) sa.value = '';
+  setDlFilter(document.querySelector('[data-dl="all"]'), 'all');
+}
 </script>
 
 {% endblock %}

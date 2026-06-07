@@ -4,10 +4,12 @@ GET /dashboard   → vue d'ensemble de toutes les campagnes
 GET /remediation → board kanban global de toutes les techniques « à construire »
 """
 
-from datetime import date as _date
+import csv
+import io
+from datetime import date as _date, datetime
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from sqlmodel import Session, select
@@ -85,5 +87,80 @@ def global_remediation(
             "pct_done":        pct_done,
             "today":           _date.today().isoformat(),
             "current_user":    current_user,
+        },
+    )
+
+
+@router.get("/remediation/export/csv")
+def global_remediation_csv(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Export CSV du board de remédiation global (toutes campagnes)."""
+    a_construire = session.exec(
+        select(TechniqueEntry)
+        .where(TechniqueEntry.status == TechniqueStatus.a_construire)
+        .order_by(TechniqueEntry.attack_id)
+    ).all()
+
+    campaigns = session.exec(select(Campaign)).all()
+    camp_by_id = {c.id: c for c in campaigns}
+
+    buf = io.StringIO()
+    writer = csv.writer(buf, quoting=csv.QUOTE_ALL)
+    writer.writerow([
+        "attack_id", "nom", "tactique", "responsable",
+        "deadline", "avancement", "campagne",
+    ])
+    STATUS_FR = {"en_cours": "En cours", "bloque": "Bloqué", "termine": "Terminé"}
+    for t in a_construire:
+        camp = camp_by_id.get(t.campaign_id)
+        writer.writerow([
+            t.attack_id, t.name, t.tactic,
+            t.remediation_assignee or "",
+            t.remediation_deadline  or "",
+            STATUS_FR.get(t.remediation_status, t.remediation_status),
+            camp.name if camp else "",
+        ])
+
+    return Response(
+        content=buf.getvalue().encode("utf-8-sig"),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="remediation-globale.csv"'},
+    )
+
+
+@router.get("/remediation/print", response_class=HTMLResponse)
+def global_remediation_print(
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Page d'impression PDF du board de remédiation global."""
+    a_construire = session.exec(
+        select(TechniqueEntry)
+        .where(TechniqueEntry.status == TechniqueStatus.a_construire)
+        .order_by(TechniqueEntry.attack_id)
+    ).all()
+
+    campaigns = session.exec(select(Campaign)).all()
+    camp_by_id = {c.id: c for c in campaigns}
+
+    total      = len(a_construire)
+    nb_termine = sum(1 for t in a_construire if t.remediation_status == "termine")
+    pct_done   = round(nb_termine * 100 / total) if total > 0 else 0
+
+    return templates.TemplateResponse(
+        request,
+        "remediation_print.html",
+        {
+            "techniques": a_construire,
+            "camp_by_id": camp_by_id,
+            "total":      total,
+            "nb_termine": nb_termine,
+            "pct_done":   pct_done,
+            "today":      _date.today().isoformat(),
+            "now":        datetime.utcnow().strftime("%d/%m/%Y à %H:%M UTC"),
+            "global":     True,
         },
     )

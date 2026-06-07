@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapport de remédiation{% if not global %} — {{ campaign.name }}{% endif %} — PurpleForge</title>
+  <style>
+    /* ── Police & base ── */
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', 'Segoe UI', sans-serif;
+      font-size: 11pt;
+      color: #1a1a2e;
+      background: #fff;
+      padding: 0;
+    }
+
+    /* ── En-tête du rapport ── */
+    .rp-header {
+      background: linear-gradient(135deg, #12091F, #2D1458);
+      color: #fff;
+      padding: 1.6rem 2rem 1.2rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .rp-header__logo {
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #A855F7;
+      letter-spacing: .02em;
+      margin-bottom: .3rem;
+    }
+
+    .rp-header__title {
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .rp-header__sub {
+      font-size: .85rem;
+      color: rgba(255,255,255,.55);
+      margin-top: .25rem;
+    }
+
+    .rp-header__right {
+      text-align: right;
+      font-size: .8rem;
+      color: rgba(255,255,255,.5);
+      flex-shrink: 0;
+    }
+
+    .rp-header__date {
+      font-size: .9rem;
+      color: rgba(255,255,255,.7);
+      font-weight: 700;
+    }
+
+    /* ── Stats globales ── */
+    .rp-stats {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1rem 2rem;
+      background: #f8f6ff;
+      border-bottom: 2px solid #e5e0d8;
+    }
+
+    .rp-stat {
+      text-align: center;
+    }
+
+    .rp-stat__nb {
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+    }
+
+    .rp-stat__lbl {
+      font-size: .75rem;
+      color: #6B7280;
+      font-weight: 600;
+    }
+
+    .rp-stat--total  .rp-stat__nb { color: #7B2FBE; }
+    .rp-stat--done   .rp-stat__nb { color: #059669; }
+    .rp-stat--cours  .rp-stat__nb { color: #d97706; }
+    .rp-stat--bloque .rp-stat__nb { color: #dc2626; }
+
+    .rp-progress {
+      flex: 1;
+      align-self: center;
+    }
+
+    .rp-progress__bar {
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: .3rem;
+    }
+
+    .rp-progress__fill {
+      height: 100%;
+      background: linear-gradient(90deg, #34d399, #059669);
+      border-radius: 5px;
+    }
+
+    .rp-progress__label {
+      font-size: .78rem;
+      color: #059669;
+      font-weight: 700;
+    }
+
+    /* ── Corps ── */
+    .rp-body {
+      padding: 1.5rem 2rem;
+    }
+
+    /* ── Tableau principal ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin-bottom: 2rem;
+    }
+
+    thead tr {
+      background: #2D1458;
+      color: #fff;
+    }
+
+    thead th {
+      padding: .55rem .7rem;
+      text-align: left;
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f0eef8;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #faf8ff;
+    }
+
+    tbody td {
+      padding: .5rem .7rem;
+      vertical-align: middle;
+    }
+
+    /* Colonnes spéciales */
+    .col-id {
+      font-family: 'Courier New', monospace;
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #2D1458;
+      background: #f3eefe;
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+
+    .col-name {
+      font-weight: 700;
+      color: #1a1a2e;
+      max-width: 220px;
+    }
+
+    .col-tactic {
+      font-size: 8.5pt;
+      color: #6B7280;
+      white-space: nowrap;
+    }
+
+    .col-assignee {
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .col-deadline {
+      white-space: nowrap;
+      font-size: 9pt;
+    }
+
+    .deadline-overdue {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    .deadline-ok {
+      color: #374151;
+    }
+
+    /* Badge statut */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-en_cours {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+
+    .status-bloque {
+      background: #FEE2E2;
+      color: #991B1B;
+      border: 1px solid #FECACA;
+    }
+
+    .status-termine {
+      background: #D1FAE5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+    }
+
+    /* Colonne campagne (mode global) */
+    .col-camp {
+      font-size: 8.5pt;
+      color: #7B2FBE;
+      font-weight: 600;
+      max-width: 140px;
+    }
+
+    /* ── Séparateurs de tactique ── */
+    .tactic-separator td {
+      background: #f3eefe !important;
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 8.5pt;
+      font-weight: 800;
+      color: #7B2FBE;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: .35rem .7rem;
+    }
+
+    /* ── Pied de page ── */
+    .rp-footer {
+      padding: 1rem 2rem;
+      border-top: 1px solid #e5e0d8;
+      font-size: 8pt;
+      color: #9CA3AF;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Impression ── */
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 10pt; }
+      .rp-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      thead tr  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .col-id   { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .tactic-separator td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .status-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      table { page-break-inside: auto; }
+      tr    { page-break-inside: avoid; }
+    }
+
+    .print-btn {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #7B2FBE;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: .75rem 1.5rem;
+      font-size: .9rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(123,47,190,.4);
+      font-family: 'Baloo 2', sans-serif;
+      transition: background .16s, transform .13s;
+    }
+
+    .print-btn:hover {
+      background: #A855F7;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+<!-- En-tête -->
+<div class="rp-header">
+  <div>
+    <div class="rp-header__logo">PurpleForge Compagnon</div>
+    <div class="rp-header__title">
+      Rapport de remédiation
+      {% if not global %}— {{ campaign.name }}{% endif %}
+    </div>
+    <div class="rp-header__sub">
+      {% if global %}
+        Toutes campagnes confondues · {{ total }} technique{% if total > 1 %}s{% endif %} à construire
+      {% else %}
+        Campagne : {{ campaign.name }} · {{ total }} technique{% if total > 1 %}s{% endif %} à construire
+      {% endif %}
+    </div>
+  </div>
+  <div class="rp-header__right">
+    <div class="rp-header__date">{{ today }}</div>
+    <div style="margin-top:.3rem;">{{ now }}</div>
+  </div>
+</div>
+
+<!-- Stats -->
+{% set nb_cours   = techniques | selectattr('remediation_status','eq','en_cours') | list | length %}
+{% set nb_bloque  = techniques | selectattr('remediation_status','eq','bloque')   | list | length %}
+<div class="rp-stats">
+  <div class="rp-stat rp-stat--total">
+    <div class="rp-stat__nb">{{ total }}</div>
+    <div class="rp-stat__lbl">Total</div>
+  </div>
+  <div class="rp-stat rp-stat--done">
+    <div class="rp-stat__nb">{{ nb_termine }}</div>
+    <div class="rp-stat__lbl">Terminé</div>
+  </div>
+  <div class="rp-stat rp-stat--cours">
+    <div class="rp-stat__nb">{{ nb_cours }}</div>
+    <div class="rp-stat__lbl">En cours</div>
+  </div>
+  <div class="rp-stat rp-stat--bloque">
+    <div class="rp-stat__nb">{{ nb_bloque }}</div>
+    <div class="rp-stat__lbl">Bloqué</div>
+  </div>
+  <div class="rp-progress">
+    <div class="rp-progress__bar">
+      <div class="rp-progress__fill" style="width:{{ pct_done }}%;"></div>
+    </div>
+    <div class="rp-progress__label">{{ pct_done }}% terminé</div>
+  </div>
+</div>
+
+<!-- Tableau -->
+<div class="rp-body">
+  {% if techniques %}
+  <table>
+    <thead>
+      <tr>
+        <th>ID ATT&amp;CK</th>
+        <th>Technique</th>
+        <th>Tactique</th>
+        {% if global %}<th>Campagne</th>{% endif %}
+        <th>Responsable</th>
+        <th>Deadline</th>
+        <th>Avancement</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set ns = namespace(last_tactic='') %}
+      {% for t in techniques | sort(attribute='tactic') %}
+
+      {# Séparateur de tactique #}
+      {% if t.tactic != ns.last_tactic %}
+      {% set ns.last_tactic = t.tactic %}
+      <tr class="tactic-separator">
+        <td colspan="{{ 7 if global else 6 }}">
+          {{ t.tactic | replace('-', ' ') | title }}
+        </td>
+      </tr>
+      {% endif %}
+
+      <tr>
+        <td><span class="col-id">{{ t.attack_id }}</span></td>
+        <td class="col-name">{{ t.name }}</td>
+        <td class="col-tactic">{{ t.tactic | replace('-', ' ') | title }}</td>
+        {% if global %}
+        <td class="col-camp">
+          {% set camp = camp_by_id.get(t.campaign_id) %}
+          {{ camp.name if camp else '—' }}
+        </td>
+        {% endif %}
+        <td class="col-assignee">{{ t.remediation_assignee or '—' }}</td>
+        <td class="col-deadline">
+          {% if t.remediation_deadline %}
+            <span class="{% if t.remediation_deadline < today %}deadline-overdue{% else %}deadline-ok{% endif %}">
+              {{ t.remediation_deadline }}
+              {% if t.remediation_deadline < today %} ⚠{% endif %}
+            </span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          <span class="status-badge status-{{ t.remediation_status }}">
+            {% if t.remediation_status == 'en_cours' %}🔧 En cours
+            {% elif t.remediation_status == 'bloque'  %}🚫 Bloqué
+            {% else %}✓ Terminé{% endif %}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#6B7280; padding:2rem 0;">Aucune technique à construire.</p>
+  {% endif %}
+</div>
+
+<!-- Pied de page -->
+<div class="rp-footer">
+  <span>PurpleForge Compagnon — Rapport généré le {{ now }}</span>
+  <span>Yeni DOUKAKAS</span>
+</div>
+
+<!-- Bouton impression (masqué à l'impression) -->
+<button class="print-btn no-print" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
+
+</body>
+</html>

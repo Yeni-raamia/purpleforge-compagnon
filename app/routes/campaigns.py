@@ -765,6 +765,94 @@ def edit_campaign(
     return RedirectResponse(url=f"/campaigns/{campaign_id}", status_code=303)
 
 
+@router.get("/{campaign_id}/remediation/export/csv")
+def export_remediation_csv(
+    campaign_id: int,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Export CSV du suivi de remédiation d'une campagne."""
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return Response(status_code=404)
+
+    techniques = session.exec(
+        select(TechniqueEntry)
+        .where(
+            TechniqueEntry.campaign_id == campaign_id,
+            TechniqueEntry.status == TechniqueStatus.a_construire,
+        )
+        .order_by(TechniqueEntry.attack_id)
+    ).all()
+
+    buf = io.StringIO()
+    writer = csv.writer(buf, quoting=csv.QUOTE_ALL)
+    writer.writerow([
+        "attack_id", "nom", "tactique", "responsable",
+        "deadline", "avancement", "campagne",
+    ])
+    STATUS_FR = {"en_cours": "En cours", "bloque": "Bloqué", "termine": "Terminé"}
+    for t in techniques:
+        writer.writerow([
+            t.attack_id, t.name, t.tactic,
+            t.remediation_assignee or "",
+            t.remediation_deadline  or "",
+            STATUS_FR.get(t.remediation_status, t.remediation_status),
+            campaign.name,
+        ])
+
+    safe = "".join(c if c.isalnum() or c in "-_" else "-" for c in campaign.name.lower()).strip("-")
+    return Response(
+        content=buf.getvalue().encode("utf-8-sig"),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="remediation-{safe}.csv"'},
+    )
+
+
+@router.get("/{campaign_id}/remediation/print", response_class=HTMLResponse)
+def print_remediation(
+    campaign_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Page d'impression PDF du suivi de remédiation d'une campagne."""
+    campaign = session.get(Campaign, campaign_id)
+    if not campaign:
+        return RedirectResponse(url="/campaigns/", status_code=303)
+
+    techniques = session.exec(
+        select(TechniqueEntry)
+        .where(
+            TechniqueEntry.campaign_id == campaign_id,
+            TechniqueEntry.status == TechniqueStatus.a_construire,
+        )
+        .order_by(TechniqueEntry.attack_id)
+    ).all()
+
+    from datetime import date as _date
+    today = _date.today().isoformat()
+    total = len(techniques)
+    nb_termine = sum(1 for t in techniques if t.remediation_status == "termine")
+    pct_done   = round(nb_termine * 100 / total) if total > 0 else 0
+
+    return templates.TemplateResponse(
+        request,
+        "remediation_print.html",
+        {
+            "campaign":   campaign,
+            "techniques": techniques,
+            "total":      total,
+            "nb_termine": nb_termine,
+            "pct_done":   pct_done,
+            "today":      today,
+            "now":        datetime.utcnow().strftime("%d/%m/%Y à %H:%M UTC"),
+            "global":     False,
+            "camp_by_id": {},
+        },
+    )
+
+
 @router.post("/{campaign_id}/delete", response_class=HTMLResponse)
 def delete_campaign(
     campaign_id: int,

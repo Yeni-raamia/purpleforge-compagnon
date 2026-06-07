@@ -180,13 +180,31 @@
 
   <!-- ─── Liste des techniques ─────────────────────────────────────────── -->
   <section>
-    <h2 class="section-title">
-      Techniques jouées
-      <span class="count-badge">{{ total }}</span>
-    </h2>
+    <div class="section-title-row">
+      <h2 class="section-title" style="margin:0;">
+        Techniques jouées
+        <span class="count-badge">{{ total }}</span>
+      </h2>
+      {% if techniques %}
+      <button class="tc-view-toggle" id="dense-toggle"
+              onclick="toggleDenseMode()" title="Changer la vue">
+        📋 Vue tableau
+      </button>
+      {% endif %}
+    </div>
 
     {% if techniques %}
-    <div class="technique-list">
+
+    <!-- En-tête tableau dense (masqué par défaut, visible en mode dense) -->
+    <div class="tc-dense-hd" id="tc-dense-hd" aria-hidden="true">
+      <span class="tc-dense-hd__col tc-dense-hd__col--id">ID</span>
+      <span class="tc-dense-hd__col tc-dense-hd__col--name">Technique</span>
+      <span class="tc-dense-hd__col tc-dense-hd__col--tactic">Tactique</span>
+      <span class="tc-dense-hd__col tc-dense-hd__col--status">Statut</span>
+      <span class="tc-dense-hd__col tc-dense-hd__col--action"></span>
+    </div>
+
+    <div class="technique-list" id="technique-list">
       {% for t in techniques %}
         {% with technique=t, campaign_id=campaign.id %}
           {% include "campaigns/partials/technique_card.html" %}
@@ -210,6 +228,32 @@ function toggleEditForm() {
   const panel = document.getElementById('edit-panel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
+
+/* ── Toggle vue cartes / vue tableau dense ── */
+function toggleDenseMode() {
+  const list = document.getElementById('technique-list');
+  const hd   = document.getElementById('tc-dense-hd');
+  const btn  = document.getElementById('dense-toggle');
+  if (!list) return;
+
+  const isDense = list.classList.toggle('technique-list--dense');
+  if (hd)  { hd.style.display  = isDense ? 'flex' : 'none'; hd.setAttribute('aria-hidden', String(!isDense)); }
+  if (btn) btn.textContent = isDense ? '🃏 Vue cartes' : '📋 Vue tableau';
+  localStorage.setItem('pf-dense-' + {{ campaign.id }}, isDense ? '1' : '0');
+}
+
+/* Restaure la préférence au chargement */
+(function () {
+  const pref = localStorage.getItem('pf-dense-' + {{ campaign.id }});
+  if (pref === '1') {
+    const list = document.getElementById('technique-list');
+    const hd   = document.getElementById('tc-dense-hd');
+    const btn  = document.getElementById('dense-toggle');
+    if (list) list.classList.add('technique-list--dense');
+    if (hd)   { hd.style.display = 'flex'; hd.setAttribute('aria-hidden', 'false'); }
+    if (btn)  btn.textContent = '🃏 Vue cartes';
+  }
+})();
 
 /* Animation du ring au chargement */
 (function () {

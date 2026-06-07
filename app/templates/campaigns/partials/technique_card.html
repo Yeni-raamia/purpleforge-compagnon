@@ -16,6 +16,20 @@
       <span class="status-badge status-badge--non_detecte">✗ Non détectée</span>
     {% endif %}
 
+    <!-- Formulaire rapide (visible en mode dense uniquement) -->
+    <form class="tc-quick-form"
+          hx-post="/campaigns/{{ campaign_id }}/techniques/{{ technique.id }}"
+          hx-target="#tech-{{ technique.id }}"
+          hx-swap="outerHTML">
+      <input type="hidden" name="blue_note" value="{{ technique.blue_note or '' }}">
+      <input type="hidden" name="red_note"  value="{{ technique.red_note  or '' }}">
+      <select name="status" class="tc-quick-select" onchange="this.form.submit()">
+        <option value="non_detecte"  {% if technique.status.value == 'non_detecte'  %}selected{% endif %}>✗ Non détectée</option>
+        <option value="a_construire" {% if technique.status.value == 'a_construire' %}selected{% endif %}>⚠ À construire</option>
+        <option value="detecte"      {% if technique.status.value == 'detecte'      %}selected{% endif %}>✓ Détectée</option>
+      </select>
+    </form>
+
     <!-- Bouton suppression (coin droit de l'en-tête) -->
     <button
       class="tc-delete-btn"
