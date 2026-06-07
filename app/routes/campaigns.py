@@ -383,28 +383,41 @@ async def import_campaign_post(
 def campaign_detail(
     campaign_id: int,
     request: Request,
+    page: int = 1,
     session: Session = Depends(get_session),
     current_user: User = Depends(require_user),
 ):
-    """Page de détail d'une campagne : ses techniques + leur statut."""
+    """Page de détail d'une campagne : ses techniques + leur statut.
+
+    Supporte la pagination via ?page=N (20 techniques par page).
+    """
+    PER_PAGE = 20
+
     campaign = session.get(Campaign, campaign_id)
     if not campaign:
         return templates.TemplateResponse(
             request, "404.html", {"message": "Campagne introuvable.", "current_user": current_user}, status_code=404
         )
 
-    techniques = session.exec(
+    all_techniques = session.exec(
         select(TechniqueEntry)
         .where(TechniqueEntry.campaign_id == campaign_id)
         .order_by(TechniqueEntry.played_at.desc())
     ).all()
 
-    # Stats pour le hero de la page détail
-    total = len(techniques)
+    # Stats globales pour le hero (toutes techniques, pas seulement la page)
+    total = len(all_techniques)
     counts = {"detecte": 0, "a_construire": 0, "non_detecte": 0}
-    for t in techniques:
+    for t in all_techniques:
         counts[t.status.value] = counts.get(t.status.value, 0) + 1
     pct_detecte = round(counts["detecte"] * 100 / total) if total > 0 else 0
+
+    # Pagination
+    page = max(1, page)
+    nb_pages  = max(1, -(-total // PER_PAGE))   # division entière au plafond
+    page      = min(page, nb_pages)
+    offset    = (page - 1) * PER_PAGE
+    techniques = all_techniques[offset : offset + PER_PAGE]
 
     return templates.TemplateResponse(
         request,
@@ -415,6 +428,9 @@ def campaign_detail(
             "total":       total,
             "counts":      counts,
             "pct_detecte": pct_detecte,
+            "page":        page,
+            "nb_pages":    nb_pages,
+            "per_page":    PER_PAGE,
             "current_user": current_user,
         },
     )

@@ -20,6 +20,7 @@ from app.models.campaign import Campaign
 from app.models.technique import TechniqueEntry, TechniqueStatus
 from app.models.user import User
 from app.services.dashboard import compute_dashboard
+from app.services.remediation_stats import compute_remediation_stats
 
 router = APIRouter(tags=["dashboard"])
 
@@ -38,6 +39,21 @@ def dashboard(
     return templates.TemplateResponse(
         request,
         "dashboard.html",
+        {"stats": stats, "current_user": current_user},
+    )
+
+
+@router.get("/remediation/stats", response_class=HTMLResponse)
+def remediation_stats_page(
+    request: Request,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(require_user),
+):
+    """Page de statistiques de remédiation : métriques, répartitions, points chauds."""
+    stats = compute_remediation_stats(session)
+    return templates.TemplateResponse(
+        request,
+        "remediation_stats.html",
         {"stats": stats, "current_user": current_user},
     )
 

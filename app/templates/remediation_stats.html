@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Statistiques de remédiation — PurpleForge Compagnon{% endblock %}
+
+{% block content %}
+
+{% set circ   = 282.74 %}
+{% set offset = (circ * (1 - stats.pct_done / 100)) | round(2) %}
+
+<!-- ═══ HERO ════════════════════════════════════════════════════════════════ -->
+<div class="rs-hero">
+  <div class="rs-orb rs-orb--1" aria-hidden="true"></div>
+  <div class="rs-orb rs-orb--2" aria-hidden="true"></div>
+
+  <div class="rs-hero__inner">
+
+    <div class="rs-hero__left">
+      <a href="/remediation" class="rmd2-back">← Board de remédiation</a>
+      <span class="cl-eyebrow">Métriques</span>
+      <h1 class="rs-hero__title">Statistiques<br>de remédiation</h1>
+      <p class="rs-hero__sub">
+        <strong>{{ stats.total }}</strong> technique{% if stats.total > 1 %}s{% endif %}
+        à construire · toutes campagnes
+      </p>
+    </div>
+
+    <!-- Anneau global -->
+    <div class="rmd2-ring-wrap">
+      <svg class="rmd2-ring" viewBox="0 0 120 120" aria-label="{{ stats.pct_done }}% terminé">
+        <defs>
+          <linearGradient id="rs-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#34d399"/>
+            <stop offset="100%" stop-color="#059669"/>
+          </linearGradient>
+          <filter id="rs-glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="60" cy="60" r="45" fill="none"
+          stroke="rgba(255,255,255,.07)" stroke-width="10" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="45" fill="none"
+          stroke="url(#rs-grad)" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="{{ circ }}" stroke-dashoffset="{{ offset }}"
+          transform="rotate(-90 60 60)" filter="url(#rs-glow)"
+          class="rs-arc" data-target="{{ offset }}" data-circ="{{ circ }}"/>
+        <text x="60" y="56" text-anchor="middle"
+          font-family="Baloo 2, sans-serif" font-size="20" font-weight="800"
+          fill="white">{{ stats.pct_done }}%</text>
+        <text x="60" y="71" text-anchor="middle"
+          font-family="Nunito, sans-serif" font-size="8.5" font-weight="600"
+          fill="rgba(255,255,255,.55)">terminé</text>
+      </svg>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="rs-kpis">
+
+      <div class="rs-kpi rs-kpi--done">
+        <div class="rs-kpi__nb">{{ stats.nb_termine }}</div>
+        <div class="rs-kpi__lbl">✓ Terminé</div>
+      </div>
+      <div class="rs-kpi rs-kpi--cours">
+        <div class="rs-kpi__nb">{{ stats.nb_en_cours }}</div>
+        <div class="rs-kpi__lbl">🔧 En cours</div>
+      </div>
+      <div class="rs-kpi rs-kpi--bloque">
+        <div class="rs-kpi__nb">{{ stats.nb_bloque }}</div>
+        <div class="rs-kpi__lbl">🚫 Bloqué</div>
+      </div>
+      {% if stats.nb_overdue > 0 %}
+      <div class="rs-kpi rs-kpi--overdue">
+        <div class="rs-kpi__nb">{{ stats.nb_overdue }}</div>
+        <div class="rs-kpi__lbl">🔴 En retard</div>
+      </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ CONTENU ════════════════════════════════════════════════════════════ -->
+{% if stats.total == 0 %}
+<div class="page-wrap">
+  <div class="empty-state" style="margin-top:3rem;">
+    <p style="font-size:2rem;">🎉</p>
+    <p>Aucune technique « À construire » — tout est pris en charge !</p>
+    <a href="/campaigns/" class="btn btn--primary" style="margin-top:1rem;">Voir les campagnes</a>
+  </div>
+</div>
+
+{% else %}
+<div class="page-wrap rs-body" style="margin-top:0;">
+
+  <!-- ── Points chauds ──────────────────────────────────────────────── -->
+  {% if stats.nb_overdue > 0 or stats.nb_no_assignee > 0 or stats.nb_no_deadline > 0 %}
+  <div class="rs-hotspots">
+    <h3 class="rs-section-title">⚠ Points chauds</h3>
+    <div class="rs-hotspot-grid">
+      {% if stats.nb_overdue > 0 %}
+      <a href="/remediation?dl=overdue" class="rs-hotspot rs-hotspot--red">
+        <span class="rs-hotspot__nb">{{ stats.nb_overdue }}</span>
+        <span class="rs-hotspot__lbl">Deadline dépassée</span>
+        <span class="rs-hotspot__arrow">→</span>
+      </a>
+      {% endif %}
+      {% if stats.nb_no_assignee > 0 %}
+      <div class="rs-hotspot rs-hotspot--amber">
+        <span class="rs-hotspot__nb">{{ stats.nb_no_assignee }}</span>
+        <span class="rs-hotspot__lbl">Sans responsable</span>
+      </div>
+      {% endif %}
+      {% if stats.nb_no_deadline > 0 %}
+      <div class="rs-hotspot rs-hotspot--grey">
+        <span class="rs-hotspot__nb">{{ stats.nb_no_deadline }}</span>
+        <span class="rs-hotspot__lbl">Sans deadline</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Grille principale : campagnes + responsables ───────────────── -->
+  <div class="rs-grid">
+
+    <!-- Répartition par campagne -->
+    {% if stats.by_campaign %}
+    <div class="rs-widget">
+      <h3 class="rs-widget__title">🗂 Par campagne</h3>
+      <div class="rs-bars">
+        {% for item in stats.by_campaign %}
+        {% set w_done   = (item.nb_termine  / stats.max_camp * 100) | round | int %}
+        {% set w_cours  = (item.nb_en_cours / stats.max_camp * 100) | round | int %}
+        {% set w_bloque = (item.nb_bloque   / stats.max_camp * 100) | round | int %}
+        <div class="rs-bar-row">
+          <a href="/campaigns/{{ item.campaign.id }}/remediation"
+             class="rs-bar-label" title="{{ item.campaign.name }}">
+            {{ item.campaign.name[:28] }}{% if item.campaign.name | length > 28 %}…{% endif %}
+          </a>
+          <div class="rs-bar-track">
+            <div class="rs-bar-seg rs-bar-seg--done"   style="width:{{ w_done }}%"></div>
+            <div class="rs-bar-seg rs-bar-seg--cours"  style="width:{{ w_cours }}%"></div>
+            <div class="rs-bar-seg rs-bar-seg--bloque" style="width:{{ w_bloque }}%"></div>
+          </div>
+          <div class="rs-bar-pills">
+            <span class="rs-mini-pill rs-mini-pill--done">{{ item.pct_done }}%</span>
+            <span class="rs-bar-total">{{ item.total }}</span>
+            {% if item.nb_overdue > 0 %}
+            <span class="rs-mini-pill rs-mini-pill--red">🔴 {{ item.nb_overdue }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="rs-legend">
+        <span class="rs-leg-dot rs-leg-dot--done"></span> Terminé
+        <span class="rs-leg-dot rs-leg-dot--cours" style="margin-left:.8rem;"></span> En cours
+        <span class="rs-leg-dot rs-leg-dot--bloque" style="margin-left:.8rem;"></span> Bloqué
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Répartition par responsable -->
+    {% if stats.by_assignee %}
+    <div class="rs-widget">
+      <h3 class="rs-widget__title">👤 Par responsable</h3>
+      <div class="rs-bars">
+        {% for item in stats.by_assignee %}
+        {% set w_done   = (item.nb_termine  / stats.max_assign * 100) | round | int %}
+        {% set w_cours  = (item.nb_en_cours / stats.max_assign * 100) | round | int %}
+        {% set w_bloque = (item.nb_bloque   / stats.max_assign * 100) | round | int %}
+        <div class="rs-bar-row">
+          <span class="rs-bar-label {% if item.is_unknown %}rs-bar-label--grey{% endif %}">
+            {% if not item.is_unknown %}
+            <span class="rs-avatar">{{ item.name[0] | upper }}</span>
+            {% endif %}
+            {{ item.name }}
+          </span>
+          <div class="rs-bar-track">
+            <div class="rs-bar-seg rs-bar-seg--done"   style="width:{{ w_done }}%"></div>
+            <div class="rs-bar-seg rs-bar-seg--cours"  style="width:{{ w_cours }}%"></div>
+            <div class="rs-bar-seg rs-bar-seg--bloque" style="width:{{ w_bloque }}%"></div>
+          </div>
+          <div class="rs-bar-pills">
+            <span class="rs-mini-pill rs-mini-pill--done">{{ item.pct_done }}%</span>
+            <span class="rs-bar-total">{{ item.total }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- ── Top tactiques en souffrance ───────────────────────────────── -->
+  {% if stats.by_tactic %}
+  <div class="rs-widget rs-widget--full">
+    <h3 class="rs-widget__title">⚔ Tactiques les plus en souffrance <span style="font-size:.75rem; font-weight:400; color:var(--gris);">(non terminées)</span></h3>
+    <div class="rs-tactic-grid">
+      {% for item in stats.by_tactic %}
+      {% set pct = (item.count / stats.max_tactic * 100) | round | int %}
+      <div class="rs-tactic-card">
+        <div class="rs-tactic-card__bar" style="--pct:{{ pct }}%;"></div>
+        <div class="rs-tactic-card__nb">{{ item.count }}</div>
+        <div class="rs-tactic-card__name">{{ item.name }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+<script>
+(function () {
+  const arc = document.querySelector('.rs-arc');
+  if (!arc) return;
+  const circ   = parseFloat(arc.dataset.circ);
+  const target = parseFloat(arc.dataset.target);
+  arc.style.strokeDashoffset = circ;
+  requestAnimationFrame(function () {
+    setTimeout(function () {
+      arc.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+      arc.style.strokeDashoffset = target;
+    }, 120);
+  });
+})();
+</script>
+
+{% endblock %}
