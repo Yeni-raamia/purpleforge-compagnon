@@ -6953,6 +6953,17 @@ select.form-control { cursor: pointer; }
   }
 }
 
+/* ── App-main : reset pleine largeur sur la page Tactical Ops ─────────────
+   Quand .app-main contient .clist-hero, on annule le max-width et le padding
+   pour que le hero et la section grille soient en vraie pleine largeur.
+   (La grille des cartes gère son propre max-width: 1200px via .clist-cards)
+   ─────────────────────────────────────────────────────────────────────────── */
+.app-main:has(.clist-hero) {
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    CAMPAGNES LIST v3 — Tactical Ops Center
    Design : fond espace, particules connectées, cards 3D glassmorphism,
