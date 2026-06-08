@@ -6952,3 +6952,705 @@ select.form-control { cursor: pointer; }
     white-space: normal;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CAMPAGNES LIST v3 — Tactical Ops Center
+   Design : fond espace, particules connectées, cards 3D glassmorphism,
+   drawer latéral, anneaux SVG animés.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Canvas particules ─────────────────────────────────────────────────── */
+.clist-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.clist-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 20% 60%, #1e0a45 0%, #0d0520 50%, #07030f 100%);
+  padding: 4rem 2.5rem 3.5rem;
+  min-height: 360px;
+}
+
+/* Grille de fond façon terminal */
+.clist-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(123,47,190,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123,47,190,.07) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+  z-index: 0;
+}
+
+/* Ligne de scan animée */
+.clist-scanline {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,.4), transparent);
+  animation: clist-scan 6s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+@keyframes clist-scan {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: .6; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.clist-hero__inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.clist-hero__left { flex: 1; min-width: 280px; }
+
+/* Eyebrow avec point clignotant */
+.clist-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #c084fc;
+  margin-bottom: 1rem;
+  opacity: .9;
+}
+
+.clist-pulse {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex-shrink: 0;
+  animation: clist-pulse-anim 2.2s ease-in-out infinite;
+}
+@keyframes clist-pulse-anim {
+  0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,.6); }
+  60%     { box-shadow: 0 0 0 9px rgba(74,222,128,0); }
+}
+
+/* Titre */
+.clist-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+  font-weight: 900;
+  line-height: 1.05;
+  color: white;
+  margin: 0 0 1.6rem;
+  letter-spacing: -.02em;
+}
+
+.clist-title__grad {
+  background: linear-gradient(135deg, #c084fc 0%, #818cf8 45%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* KPIs */
+.clist-kpis {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.clist-kpi__val {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 2.1rem;
+  font-weight: 900;
+  color: white;
+  line-height: 1;
+}
+.clist-kpi--g { color: #4ade80; }
+.clist-kpi--a { color: #f59e0b; }
+.clist-kpi--r { color: #f87171; }
+
+.clist-kpi__lbl {
+  font-family: 'Nunito', sans-serif;
+  font-size: .7rem;
+  color: rgba(255,255,255,.4);
+  margin-top: .18rem;
+  font-weight: 600;
+}
+
+.clist-kpi__sep {
+  width: 1px;
+  height: 38px;
+  background: linear-gradient(to bottom, transparent, rgba(168,85,247,.3), transparent);
+}
+
+/* Boutons navigation */
+.clist-nav-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+
+.clist-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .42rem 1rem;
+  border: 1px solid rgba(168,85,247,.3);
+  border-radius: 99px;
+  color: rgba(255,255,255,.75);
+  font-family: 'Nunito', sans-serif;
+  font-size: .78rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: rgba(123,47,190,.1);
+  backdrop-filter: blur(8px);
+  transition: all .22s;
+}
+.clist-nav-btn:hover {
+  background: rgba(168,85,247,.22);
+  border-color: rgba(168,85,247,.65);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(168,85,247,.25);
+}
+
+/* ── Bouton orbe "Nouvelle campagne" ───────────────────────────────────── */
+.clist-hero__right { flex-shrink: 0; }
+
+.clist-orb-btn {
+  position: relative;
+  width: 158px; height: 158px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Anneau rotatif externe */
+.clist-orb-btn__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: conic-gradient(from 0deg, #7B2FBE 0%, #38bdf8 33%, #4ade80 66%, #7B2FBE 100%) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  animation: clist-ring-spin 5s linear infinite;
+  opacity: .7;
+  transition: opacity .3s;
+}
+@keyframes clist-ring-spin { to { transform: rotate(360deg); } }
+.clist-orb-btn:hover .clist-orb-btn__ring { opacity: 1; }
+
+/* Noyau du bouton */
+.clist-orb-btn__core {
+  position: relative;
+  z-index: 1;
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(168,85,247,.3) 0%, rgba(18,9,31,.85) 60%);
+  border: 1px solid rgba(168,85,247,.25);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  transition: all .3s cubic-bezier(.23,1,.32,1);
+  box-shadow: 0 0 30px rgba(123,47,190,.25), inset 0 0 20px rgba(123,47,190,.08);
+}
+.clist-orb-btn:hover .clist-orb-btn__core {
+  background: radial-gradient(circle at 35% 35%, rgba(168,85,247,.4) 0%, rgba(45,20,88,.85) 60%);
+  box-shadow: 0 0 60px rgba(123,47,190,.55), 0 0 120px rgba(123,47,190,.2),
+              inset 0 0 30px rgba(123,47,190,.15);
+  transform: scale(1.05);
+}
+
+.clist-orb-btn__plus {
+  font-size: 1.9rem;
+  font-weight: 200;
+  color: white;
+  line-height: 1;
+  transition: transform .3s;
+}
+.clist-orb-btn:hover .clist-orb-btn__plus { transform: rotate(90deg); }
+
+.clist-orb-btn__label {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .7rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.8);
+  text-align: center;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+/* ── Drawer création ────────────────────────────────────────────────────── */
+.clist-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
+}
+.clist-drawer--open { pointer-events: all; }
+
+.clist-drawer__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4,2,12,.7);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity .35s;
+}
+.clist-drawer--open .clist-drawer__overlay { opacity: 1; }
+
+.clist-drawer__panel {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 95vw);
+  height: 100%;
+  background: linear-gradient(155deg, #1a0a35 0%, #0e0620 100%);
+  border-left: 1px solid rgba(168,85,247,.2);
+  box-shadow: -30px 0 80px rgba(0,0,0,.7);
+  padding: 2rem 2rem 3rem;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform .38s cubic-bezier(.23,1,.32,1);
+}
+.clist-drawer--open .clist-drawer__panel { transform: translateX(0); }
+
+.clist-drawer__topbar {
+  display: flex;
+  gap: .45rem;
+  margin-bottom: 1.8rem;
+}
+.clist-drawer__topbar-dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.clist-drawer__topbar-dot:first-child { background: rgba(248,113,113,.5); }
+.clist-drawer__topbar-dot:nth-child(2){ background: rgba(245,158,11,.5); }
+.clist-drawer__topbar-dot:nth-child(3){ background: rgba(74,222,128,.5); }
+
+.clist-drawer__hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.clist-drawer__title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: white;
+  margin: 0;
+}
+
+.clist-drawer__close {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  color: rgba(255,255,255,.6);
+  width: 34px; height: 34px;
+  cursor: pointer;
+  font-size: .95rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.clist-drawer__close:hover {
+  background: rgba(248,113,113,.15);
+  border-color: rgba(248,113,113,.3);
+  color: #f87171;
+}
+
+.clist-drawer__form { display: flex; flex-direction: column; gap: 0; }
+
+/* Champs du formulaire */
+.clist-field { margin-bottom: 1.4rem; }
+
+.clist-field__lbl {
+  display: block;
+  font-family: 'Nunito', sans-serif;
+  font-size: .72rem;
+  font-weight: 800;
+  color: rgba(255,255,255,.6);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: .5rem;
+}
+
+.clist-required { color: #f87171; }
+
+.clist-field__hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: rgba(255,255,255,.3);
+  font-size: .72rem;
+}
+
+.clist-field__inp {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(168,85,247,.2);
+  border-radius: 11px;
+  padding: .72rem 1rem;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: .92rem;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.clist-field__inp::placeholder { color: rgba(255,255,255,.2); }
+.clist-field__inp:focus {
+  border-color: rgba(168,85,247,.6);
+  background: rgba(168,85,247,.06);
+  box-shadow: 0 0 0 3px rgba(168,85,247,.14), 0 0 24px rgba(168,85,247,.08);
+}
+.clist-field__ta { resize: vertical; min-height: 82px; }
+
+/* Bouton soumettre */
+.clist-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  width: 100%;
+  padding: .9rem 1.5rem;
+  background: linear-gradient(135deg, #7B2FBE 0%, #5b21b6 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .98rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .25s;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: .02em;
+}
+.clist-submit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.clist-submit-btn:hover::after { opacity: 1; }
+.clist-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 35px rgba(123,47,190,.55);
+}
+.clist-submit-btn__ico { font-size: 1.05rem; }
+
+/* ── Section grille ──────────────────────────────────────────────────────── */
+.clist-section {
+  background: linear-gradient(180deg, #07030f 0%, #0a0514 100%);
+  min-height: 60vh;
+  padding: 2.8rem 2.5rem 4rem;
+}
+
+.clist-cards {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.4rem;
+}
+
+/* ── Carte campagne ──────────────────────────────────────────────────────── */
+.clist-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+  background: linear-gradient(145deg, rgba(28,12,55,.85) 0%, rgba(10,5,22,.92) 100%);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 20px;
+  padding: 1.4rem 1.4rem 1.2rem;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow .3s;
+  will-change: transform;
+  backdrop-filter: blur(14px);
+}
+
+/* Trait coloré gauche (3px) */
+.clist-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20px; bottom: 20px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+.clist-card--good::before {
+  background: linear-gradient(to bottom, #4ade80, #22c55e);
+  box-shadow: 0 0 16px rgba(74,222,128,.6);
+}
+.clist-card--warn::before {
+  background: linear-gradient(to bottom, #f59e0b, #d97706);
+  box-shadow: 0 0 16px rgba(245,158,11,.6);
+}
+.clist-card--bad::before {
+  background: linear-gradient(to bottom, #f87171, #ef4444);
+  box-shadow: 0 0 16px rgba(248,113,113,.6);
+}
+
+/* Glow couleur sur hover */
+.clist-card--good:hover {
+  box-shadow: 0 24px 70px rgba(74,222,128,.14), 0 6px 24px rgba(0,0,0,.5),
+              0 0 0 1px rgba(74,222,128,.15);
+}
+.clist-card--warn:hover {
+  box-shadow: 0 24px 70px rgba(245,158,11,.14), 0 6px 24px rgba(0,0,0,.5),
+              0 0 0 1px rgba(245,158,11,.15);
+}
+.clist-card--bad:hover {
+  box-shadow: 0 24px 70px rgba(248,113,113,.14), 0 6px 24px rgba(0,0,0,.5),
+              0 0 0 1px rgba(248,113,113,.15);
+}
+
+/* Brillant au survol (suit la souris via JS) */
+.clist-card__shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 0;
+  transition: background .1s;
+}
+
+/* En-tête de la carte */
+.clist-card__top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.clist-card__meta { display: flex; flex-direction: column; gap: .15rem; }
+
+.clist-card__date {
+  font-family: 'Nunito', sans-serif;
+  font-size: .68rem;
+  color: rgba(255,255,255,.28);
+  font-weight: 600;
+}
+
+.clist-card__total {
+  font-family: 'Nunito', sans-serif;
+  font-size: .68rem;
+  color: rgba(168,85,247,.55);
+  font-weight: 700;
+}
+
+/* Anneau SVG */
+.clist-ring {
+  position: relative;
+  width: 46px; height: 46px;
+  flex-shrink: 0;
+}
+.clist-ring svg { width: 100%; height: 100%; }
+
+.clist-ring__val {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: .58rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Nom de la campagne */
+.clist-card__name {
+  position: relative;
+  z-index: 1;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1.08rem;
+  font-weight: 900;
+  color: white;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Description */
+.clist-card__desc {
+  position: relative;
+  z-index: 1;
+  font-family: 'Nunito', sans-serif;
+  font-size: .8rem;
+  color: rgba(255,255,255,.4);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Tags APT */
+.clist-card__tags {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+}
+
+.clist-apt-tag {
+  display: inline-block;
+  padding: .14rem .55rem;
+  border-radius: 99px;
+  border: 1px solid rgba(168,85,247,.28);
+  background: rgba(168,85,247,.07);
+  font-family: 'Nunito', sans-serif;
+  font-size: .67rem;
+  font-weight: 800;
+  color: rgba(196,148,255,.85);
+  letter-spacing: .025em;
+}
+
+/* Pied de carte */
+.clist-card__foot {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: .8rem;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+
+/* Barre segmentée */
+.clist-segbar {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.05);
+  display: flex;
+  overflow: hidden;
+  margin-bottom: .65rem;
+}
+.clist-segbar__d { background: #4ade80; height: 100%; }
+.clist-segbar__c { background: #f59e0b; height: 100%; }
+.clist-segbar__n { background: #f87171; height: 100%; }
+
+/* Rangée stats + flèche */
+.clist-card__stats {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+
+.clist-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  padding: .18rem .52rem;
+  border-radius: 99px;
+  font-family: 'Nunito', sans-serif;
+  font-size: .7rem;
+  font-weight: 800;
+}
+.clist-stat--d { background: rgba(74,222,128,.1);  color: #4ade80; }
+.clist-stat--c { background: rgba(245,158,11,.1);  color: #f59e0b; }
+.clist-stat--n { background: rgba(248,113,113,.1); color: #f87171; }
+
+.clist-card__go {
+  margin-left: auto;
+  font-family: 'Nunito', sans-serif;
+  font-size: .73rem;
+  color: rgba(168,85,247,.55);
+  font-weight: 800;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity .25s, transform .25s;
+}
+.clist-card:hover .clist-card__go {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.clist-card__novide {
+  font-family: 'Nunito', sans-serif;
+  font-size: .78rem;
+  color: rgba(255,255,255,.22);
+  margin: 0;
+}
+.clist-card__novide span {
+  color: rgba(168,85,247,.55);
+  font-weight: 700;
+}
+
+/* ── État vide ───────────────────────────────────────────────────────────── */
+.clist-empty {
+  max-width: 400px;
+  margin: 5rem auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.clist-empty__icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.clist-empty__title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: white;
+  margin: 0 0 .5rem;
+}
+.clist-empty__sub {
+  font-family: 'Nunito', sans-serif;
+  font-size: .88rem;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 1.8rem;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .clist-hero { padding: 2.8rem 1.4rem 2.5rem; }
+  .clist-kpis { gap: 1rem; }
+  .clist-orb-btn { width: 120px; height: 120px; }
+  .clist-orb-btn__core { width: 106px; height: 106px; }
+  .clist-section { padding: 1.5rem 1.2rem 3rem; }
+  .clist-cards { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+@media (max-width: 600px) {
+  .clist-title { font-size: 2.2rem; }
+  .clist-hero__inner { gap: 1.5rem; }
+}

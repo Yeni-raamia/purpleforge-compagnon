@@ -3,160 +3,252 @@
 
 {% block content %}
 
-<!-- ═══ HERO ════════════════════════════════════════════════════════════════ -->
-<div class="cl-hero">
-  <div class="cl-orb cl-orb--1" aria-hidden="true"></div>
-  <div class="cl-orb cl-orb--2" aria-hidden="true"></div>
+<!-- ═══ HERO TACTICAL OPS ══════════════════════════════════════════════════ -->
+<div class="clist-hero">
 
-  <div class="cl-hero__inner">
+  <!-- Canvas particules (injecté par JS) -->
+  <canvas class="clist-canvas" id="clist-canvas" aria-hidden="true"></canvas>
 
-    <div class="cl-hero__left">
-      <span class="cl-eyebrow">Purple Team Operations</span>
-      <h1 class="cl-hero__title">Campagnes</h1>
-      <p class="cl-hero__sub">
-        <strong>{{ nb_campaigns }}</strong>
-        campagne{% if nb_campaigns != 1 %}s{% endif %}
-        &middot;
-        <strong>{{ nb_techniques }}</strong>
-        technique{% if nb_techniques != 1 %}s{% endif %} au total
-      </p>
+  <!-- Grille de fond -->
+  <div class="clist-grid-bg" aria-hidden="true"></div>
 
-      <div class="cl-hero__btns">
-        <a href="/campaigns/templates" class="cl-hero__btn">🎯 Templates APT</a>
-        <a href="/campaigns/compare"   class="cl-hero__btn">⚖ Comparer</a>
-        <a href="/campaigns/import"    class="cl-hero__btn">⬆ Importer</a>
+  <!-- Ligne de scan animée -->
+  <div class="clist-scanline" aria-hidden="true"></div>
+
+  <div class="clist-hero__inner">
+
+    <!-- ── Gauche : titre + KPIs + actions ─── -->
+    <div class="clist-hero__left">
+
+      <div class="clist-eyebrow">
+        <span class="clist-pulse" aria-hidden="true"></span>
+        Purple Team Operations Center
+      </div>
+
+      <h1 class="clist-title">
+        Mes <span class="clist-title__grad">Campagnes</span>
+      </h1>
+
+      <div class="clist-kpis">
+        <div class="clist-kpi">
+          <div class="clist-kpi__val">{{ nb_campaigns }}</div>
+          <div class="clist-kpi__lbl">campagne{% if nb_campaigns != 1 %}s{% endif %}</div>
+        </div>
+
+        <div class="clist-kpi__sep" aria-hidden="true"></div>
+
+        <div class="clist-kpi">
+          <div class="clist-kpi__val">{{ nb_techniques }}</div>
+          <div class="clist-kpi__lbl">technique{% if nb_techniques != 1 %}s{% endif %}</div>
+        </div>
+
+        {% if nb_techniques > 0 %}
+        {% set total_d = namespace(v=0) %}
+        {% for item in campaigns_stats %}{% set total_d.v = total_d.v + item.counts.detecte %}{% endfor %}
+        {% set pct_global = (total_d.v / nb_techniques * 100) | round | int %}
+        <div class="clist-kpi__sep" aria-hidden="true"></div>
+        <div class="clist-kpi">
+          <div class="clist-kpi__val {% if pct_global >= 60 %}clist-kpi--g{% elif pct_global >= 30 %}clist-kpi--a{% else %}clist-kpi--r{% endif %}">
+            {{ pct_global }}%
+          </div>
+          <div class="clist-kpi__lbl">couverture globale</div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="clist-nav-btns">
+        <a href="/campaigns/templates" class="clist-nav-btn">
+          <span aria-hidden="true">🎯</span> Templates APT
+        </a>
+        <a href="/campaigns/compare" class="clist-nav-btn">
+          <span aria-hidden="true">⚖</span> Comparer
+        </a>
+        <a href="/campaigns/import" class="clist-nav-btn">
+          <span aria-hidden="true">⬆</span> Importer
+        </a>
       </div>
     </div>
 
-    <button class="cl-hero__cta" onclick="toggleCreateForm()">
-      <span aria-hidden="true">＋</span> Nouvelle campagne
-    </button>
+    <!-- ── Droite : bouton Nouvelle campagne ─── -->
+    <div class="clist-hero__right">
+      <button class="clist-orb-btn" onclick="openDrawer()" aria-label="Nouvelle campagne">
+        <div class="clist-orb-btn__ring" aria-hidden="true"></div>
+        <div class="clist-orb-btn__core">
+          <span class="clist-orb-btn__plus" aria-hidden="true">＋</span>
+          <span class="clist-orb-btn__label">Nouvelle<br>campagne</span>
+        </div>
+      </button>
+    </div>
 
   </div>
 </div>
 
-<!-- ═══ PANNEAU DE CRÉATION (masqué par défaut) ══════════════════════════ -->
-<div class="cl-panel" id="cl-panel" aria-hidden="true">
-  <div class="cl-panel__inner">
+<!-- ═══ DRAWER CRÉATION ═════════════════════════════════════════════════════ -->
+<div class="clist-drawer" id="clist-drawer" aria-hidden="true" role="dialog" aria-modal="true"
+     aria-label="Créer une nouvelle campagne">
 
-    <div class="cl-panel__hd">
-      <h2 class="cl-panel__title">✦ Nouvelle campagne</h2>
-      <button class="cl-panel__close" onclick="toggleCreateForm()"
-              aria-label="Fermer">✕</button>
+  <div class="clist-drawer__overlay" onclick="closeDrawer()" aria-hidden="true"></div>
+
+  <div class="clist-drawer__panel">
+
+    <!-- Barre déco top -->
+    <div class="clist-drawer__topbar" aria-hidden="true">
+      <div class="clist-drawer__topbar-dot"></div>
+      <div class="clist-drawer__topbar-dot"></div>
+      <div class="clist-drawer__topbar-dot"></div>
     </div>
 
-    <form method="post" action="/campaigns/" class="cl-panel__form">
+    <div class="clist-drawer__hd">
+      <div>
+        <div class="clist-eyebrow" style="margin-bottom:.4rem; color:rgba(196,148,255,.8);">
+          Nouvelle opération
+        </div>
+        <h2 class="clist-drawer__title">Créer une campagne</h2>
+      </div>
+      <button class="clist-drawer__close" onclick="closeDrawer()" aria-label="Fermer">✕</button>
+    </div>
 
-      <div class="cl-panel__grid">
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="name">Nom *</label>
-          <input class="form-control" type="text" id="name" name="name"
-            required placeholder="Ex : Red Team Juin 2025" maxlength="120">
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label for="tags">
-            Groupes d'attaquants
-            <span style="font-weight:400; color:var(--gris); font-size:.75rem;">(optionnel)</span>
-          </label>
-          <input class="form-control" type="text" id="tags" name="tags"
-            placeholder="APT28, Lazarus, FIN7…" list="apt-suggestions">
-          <datalist id="apt-suggestions">
-            <option value="APT28"><option value="APT29"><option value="APT41">
-            <option value="APT32"><option value="APT38"><option value="Lazarus">
-            <option value="Sandworm"><option value="Turla"><option value="FIN7">
-            <option value="FIN11"><option value="Carbanak"><option value="ALPHV">
-            <option value="LockBit"><option value="Conti"><option value="REvil">
-          </datalist>
-        </div>
+    <form method="post" action="/campaigns/" class="clist-drawer__form">
+
+      <div class="clist-field">
+        <label class="clist-field__lbl" for="name">Nom de la campagne <span class="clist-required">*</span></label>
+        <input class="clist-field__inp" type="text" id="name" name="name"
+          required placeholder="Ex : Red Team Q3 2025" maxlength="120" autocomplete="off">
       </div>
 
-      <div class="form-group">
-        <label for="description">Description (optionnelle)</label>
-        <textarea class="form-control" id="description" name="description"
-          placeholder="Contexte, périmètre, objectifs…" rows="2"></textarea>
+      <div class="clist-field">
+        <label class="clist-field__lbl" for="tags">
+          Groupes d'attaquants
+          <span class="clist-field__hint">— séparés par des virgules</span>
+        </label>
+        <input class="clist-field__inp" type="text" id="tags" name="tags"
+          placeholder="APT28, Lazarus, FIN7…" list="apt-suggestions" autocomplete="off">
+        <datalist id="apt-suggestions">
+          <option value="APT28"><option value="APT29"><option value="APT41">
+          <option value="APT32"><option value="APT38"><option value="Lazarus">
+          <option value="Sandworm"><option value="Turla"><option value="FIN7">
+          <option value="FIN11"><option value="Carbanak"><option value="ALPHV">
+          <option value="LockBit"><option value="Conti"><option value="REvil">
+        </datalist>
       </div>
 
-      <button type="submit" class="btn btn--primary">Créer la campagne →</button>
+      <div class="clist-field">
+        <label class="clist-field__lbl" for="description">Description <span class="clist-field__hint">— optionnelle</span></label>
+        <textarea class="clist-field__inp clist-field__ta" id="description" name="description"
+          placeholder="Contexte, périmètre, objectifs…" rows="3"></textarea>
+      </div>
+
+      <button type="submit" class="clist-submit-btn">
+        <span>Lancer la campagne</span>
+        <span class="clist-submit-btn__ico" aria-hidden="true">⟶</span>
+      </button>
 
     </form>
   </div>
 </div>
 
-<!-- ═══ GRILLE DES CAMPAGNES ════════════════════════════════════════════ -->
-<div class="page-wrap" style="margin-top:0; padding-top:2rem;">
+<!-- ═══ GRILLE CAMPAGNES ════════════════════════════════════════════════════ -->
+<section class="clist-section">
 
   {% if campaigns_stats %}
-  <div class="cl-grid">
+
+  <div class="clist-cards">
     {% for item in campaigns_stats %}
 
-    {# Couleur de santé #}
-    {% if item.pct_detecte >= 60 %}{% set health = 'good' %}
-    {% elif item.pct_detecte >= 30 %}{% set health = 'warn' %}
-    {% else %}{% set health = 'bad' %}{% endif %}
+    {# Santé de la campagne #}
+    {% if item.pct_detecte >= 60 %}
+      {% set health = 'good' %}{% set hcol = '#4ade80' %}
+    {% elif item.pct_detecte >= 30 %}
+      {% set health = 'warn' %}{% set hcol = '#f59e0b' %}
+    {% else %}
+      {% set health = 'bad' %}{% set hcol = '#f87171' %}
+    {% endif %}
+
+    {# Anneau SVG #}
+    {% set circ = 100.531 %}
+    {% if item.total > 0 %}
+      {% set off = (circ * (1 - item.pct_detecte / 100)) | round(2) %}
+    {% else %}
+      {% set off = circ %}
+    {% endif %}
 
     <a href="/campaigns/{{ item.campaign.id }}"
-       class="db2-camp-card db2-camp-card--{{ health }}">
+       class="clist-card clist-card--{{ health }}"
+       data-health="{{ health }}">
 
-      <!-- Mini ring -->
-      <div class="db2-camp-ring">
-        {% set circ = 113.097 %}
-        {% if item.total > 0 %}
-          {% set off = (circ * (1 - item.pct_detecte / 100)) | round(2) %}
-        {% else %}
-          {% set off = circ %}
-        {% endif %}
-        <svg viewBox="0 0 40 40" aria-hidden="true">
-          <circle cx="20" cy="20" r="18" fill="none"
-            stroke="rgba(255,255,255,0.08)" stroke-width="3.5"/>
-          <circle cx="20" cy="20" r="18" fill="none"
-            stroke="{% if health == 'good' %}#4ade80{% elif health == 'warn' %}#f59e0b{% else %}#f87171{% endif %}"
-            stroke-width="3.5" stroke-linecap="round"
-            stroke-dasharray="{{ circ }}" stroke-dashoffset="{{ off }}"
-            transform="rotate(-90 20 20)"/>
-        </svg>
-        <span class="db2-camp-ring__pct">{{ item.pct_detecte }}%</span>
-      </div>
+      <!-- Effet brillant au survol -->
+      <div class="clist-card__shine" aria-hidden="true"></div>
 
-      <!-- Corps -->
-      <div class="db2-camp-card__body">
-        <h3 class="db2-camp-card__name">{{ item.campaign.name }}</h3>
-        {% if item.campaign.description %}
-        <p class="db2-camp-card__desc">
-          {{ item.campaign.description[:80] }}{% if item.campaign.description | length > 80 %}…{% endif %}
-        </p>
-        {% endif %}
-        {% if item.campaign.tags %}
-        <div class="db2-camp-card__tags">
-          {% for tag in item.campaign.tags.split(',') %}{% set t = tag.strip() %}{% if t %}
-          <span class="db2-apt-chip">{{ t }}</span>
-          {% endif %}{% endfor %}
+      <!-- En-tête de carte -->
+      <div class="clist-card__top">
+        <div class="clist-card__meta">
+          <time class="clist-card__date"
+                datetime="{{ item.campaign.created_at.strftime('%Y-%m-%d') }}">
+            {{ item.campaign.created_at.strftime('%d %b %Y') }}
+          </time>
+          {% if item.total > 0 %}
+          <span class="clist-card__total">{{ item.total }} TTP{% if item.total > 1 %}s{% endif %}</span>
+          {% endif %}
         </div>
-        {% endif %}
+
+        <!-- Anneau de détection -->
+        <div class="clist-ring" title="{{ item.pct_detecte }}% détecté">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <!-- Piste -->
+            <circle cx="18" cy="18" r="16" fill="none"
+              stroke="rgba(255,255,255,0.07)" stroke-width="3"/>
+            <!-- Arc -->
+            <circle cx="18" cy="18" r="16" fill="none"
+              stroke="{{ hcol }}" stroke-width="3" stroke-linecap="round"
+              stroke-dasharray="{{ circ }}" stroke-dashoffset="{{ off }}"
+              transform="rotate(-90 18 18)"
+              class="clist-ring__arc"/>
+          </svg>
+          <span class="clist-ring__val" style="color:{{ hcol }}">{{ item.pct_detecte }}%</span>
+        </div>
       </div>
 
-      <!-- Pied -->
-      <div class="db2-camp-card__foot">
+      <!-- Nom -->
+      <h3 class="clist-card__name">{{ item.campaign.name }}</h3>
+
+      <!-- Description -->
+      {% if item.campaign.description %}
+      <p class="clist-card__desc">
+        {{ item.campaign.description[:100] }}{% if item.campaign.description | length > 100 %}…{% endif %}
+      </p>
+      {% endif %}
+
+      <!-- Tags APT -->
+      {% if item.campaign.tags %}
+      <div class="clist-card__tags">
+        {% for tag in item.campaign.tags.split(',') %}{% set t = tag.strip() %}{% if t %}
+        <span class="clist-apt-tag">{{ t }}</span>
+        {% endif %}{% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Pied : barre + stats -->
+      <div class="clist-card__foot">
         {% if item.total > 0 %}
-        <div class="db2-mini-bar">
           {% set pd = (item.counts.detecte     / item.total * 100) | round | int %}
           {% set pc = (item.counts.a_construire / item.total * 100) | round | int %}
           {% set pn = (item.counts.non_detecte  / item.total * 100) | round | int %}
-          <div class="db2-mini-seg db2-mini-seg--d" style="width:{{ pd }}%"></div>
-          <div class="db2-mini-seg db2-mini-seg--c" style="width:{{ pc }}%"></div>
-          <div class="db2-mini-seg db2-mini-seg--n" style="width:{{ pn }}%"></div>
-        </div>
-        <div class="db2-camp-card__row">
-          <div class="db2-camp-pills">
-            <span class="db2-pill db2-pill--d">✓ {{ item.counts.detecte }}</span>
-            <span class="db2-pill db2-pill--c">⚙ {{ item.counts.a_construire }}</span>
-            <span class="db2-pill db2-pill--n">✗ {{ item.counts.non_detecte }}</span>
+          <div class="clist-segbar">
+            <div class="clist-segbar__d" style="width:{{ pd }}%"></div>
+            <div class="clist-segbar__c" style="width:{{ pc }}%"></div>
+            <div class="clist-segbar__n" style="width:{{ pn }}%"></div>
           </div>
-          <span class="db2-camp-date">{{ item.campaign.created_at.strftime("%d/%m/%y") }}</span>
-        </div>
+          <div class="clist-card__stats">
+            <span class="clist-stat clist-stat--d">✓ {{ item.counts.detecte }}</span>
+            <span class="clist-stat clist-stat--c">⚙ {{ item.counts.a_construire }}</span>
+            <span class="clist-stat clist-stat--n">✗ {{ item.counts.non_detecte }}</span>
+            <span class="clist-card__go" aria-hidden="true">Ouvrir →</span>
+          </div>
         {% else %}
-        <span class="db2-camp-empty">Aucune technique ajoutée</span>
+          <p class="clist-card__novide">
+            Aucune technique — <span>ajouter via la matrice →</span>
+          </p>
         {% endif %}
-        <span class="db2-camp-arrow" aria-hidden="true">→</span>
       </div>
 
     </a>
@@ -164,27 +256,144 @@
   </div>
 
   {% else %}
-  <div class="empty-state">
-    <p style="font-size:2.5rem; margin-bottom:.5rem;">🗂</p>
-    <p>Aucune campagne pour l'instant.</p>
-    <button class="btn btn--primary" style="margin-top:1rem;" onclick="toggleCreateForm()">
-      Créer la première campagne →
+
+  <div class="clist-empty">
+    <div class="clist-empty__icon" aria-hidden="true">🛡</div>
+    <h2 class="clist-empty__title">Aucune campagne</h2>
+    <p class="clist-empty__sub">Commencez par créer votre première opération purple team.</p>
+    <button class="clist-submit-btn" style="margin:0 auto;" onclick="openDrawer()">
+      <span>Créer une campagne</span>
+      <span class="clist-submit-btn__ico" aria-hidden="true">⟶</span>
     </button>
   </div>
+
   {% endif %}
 
-</div>
+</section>
 
+<!-- ════════════════════════════════════════════════════════════════════════
+     SCRIPTS
+     ════════════════════════════════════════════════════════════════════════ -->
 <script>
-function toggleCreateForm() {
-  const panel = document.getElementById('cl-panel');
-  const open  = panel.classList.toggle('cl-panel--open');
-  panel.setAttribute('aria-hidden', String(!open));
-  if (open) {
-    const inp = panel.querySelector('input[name="name"]');
-    if (inp) setTimeout(() => inp.focus(), 320);
-  }
+/* ── Drawer ────────────────────────────────────────────────────────────── */
+function openDrawer() {
+  const d = document.getElementById('clist-drawer');
+  d.classList.add('clist-drawer--open');
+  d.setAttribute('aria-hidden', 'false');
+  setTimeout(() => d.querySelector('#name')?.focus(), 360);
 }
+function closeDrawer() {
+  const d = document.getElementById('clist-drawer');
+  d.classList.remove('clist-drawer--open');
+  d.setAttribute('aria-hidden', 'true');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+/* ── 3-D Tilt sur les cartes ──────────────────────────────────────────── */
+document.querySelectorAll('.clist-card').forEach(card => {
+  let raf;
+  card.addEventListener('mousemove', e => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const r  = card.getBoundingClientRect();
+      const x  = (e.clientX - r.left  - r.width  / 2) / r.width;
+      const y  = (e.clientY - r.top   - r.height / 2) / r.height;
+      card.style.transform = `perspective(900px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) translateZ(8px)`;
+
+      /* Brillant qui suit la souris */
+      const shine = card.querySelector('.clist-card__shine');
+      if (shine) {
+        const px = ((e.clientX - r.left) / r.width)  * 100;
+        const py = ((e.clientY - r.top)  / r.height) * 100;
+        shine.style.background =
+          `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,.08) 0%, transparent 60%)`;
+      }
+    });
+  });
+
+  card.addEventListener('mouseleave', () => {
+    cancelAnimationFrame(raf);
+    card.style.transition = 'transform .6s cubic-bezier(.23,1,.32,1), box-shadow .3s';
+    card.style.transform  = '';
+    const shine = card.querySelector('.clist-card__shine');
+    if (shine) shine.style.background = 'none';
+    setTimeout(() => { card.style.transition = ''; }, 620);
+  });
+});
+
+/* ── Animation des anneaux au chargement ─────────────────────────────── */
+document.querySelectorAll('.clist-ring__arc').forEach((arc, i) => {
+  const target = parseFloat(arc.getAttribute('stroke-dashoffset'));
+  const circ   = parseFloat(arc.getAttribute('stroke-dasharray'));
+  arc.style.strokeDashoffset = circ;
+  setTimeout(() => {
+    arc.style.transition = 'stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)';
+    arc.style.strokeDashoffset = target;
+  }, 150 + i * 80);
+});
+
+/* ── Canvas particules ────────────────────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById('clist-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const hero = canvas.parentElement;
+  let W, H, pts = [], raf;
+  const N = 75;
+
+  function resize() {
+    W = canvas.width  = hero.offsetWidth;
+    H = canvas.height = hero.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', () => { resize(); });
+
+  for (let i = 0; i < N; i++) {
+    pts.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.4 + .3,
+      vx: (Math.random() - .5) * .3,
+      vy: (Math.random() - .5) * .3,
+      a: Math.random() * .55 + .15,
+    });
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+
+    /* Liaisons entre points proches */
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = pts[i].x - pts[j].x;
+        const dy = pts[i].y - pts[j].y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < 130) {
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = `rgba(168,85,247,${(1 - d / 130) * .2})`;
+          ctx.lineWidth = .7;
+          ctx.stroke();
+        }
+      }
+    }
+
+    /* Points */
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(196,148,255,${p.a})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    });
+
+    raf = requestAnimationFrame(tick);
+  }
+  tick();
+})();
 </script>
 
 {% endblock %}
