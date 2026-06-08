@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="screenshots/banner.png" alt="PurpleForge Compagnon" width="100%"/>
+<img src="screenshots/banner.svg" alt="PurpleForge Compagnon" width="100%"/>
 
 # PurpleForge Compagnon
 
