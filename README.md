@@ -41,7 +41,21 @@ TTP played  →  Sigma rule suggested  →  Rule deployed & tested  →  Coverag
 
 ## Screenshots
 
-> Full screenshots coming soon. Clone the repo, run `uvicorn app.main:app --reload --port 8080` and explore the interface locally.
+| Campaigns — Tactical Ops Center | Campaign Detail |
+|---|---|
+| ![Campaigns](screenshots/campaigns_list.png) | ![Detail](screenshots/campaign_detail.png) |
+
+| ATT&CK Matrix | Coverage by Tactic |
+|---|---|
+| ![Matrix](screenshots/matrix.png) | ![Coverage](screenshots/coverage.png) |
+
+| Remediation Board | Global Dashboard |
+|---|---|
+| ![Remediation](screenshots/remediation.png) | ![Dashboard](screenshots/dashboard_home.png) |
+
+| Statistics |
+|---|
+| ![Stats](screenshots/stats.png) |
 
 ---
 
