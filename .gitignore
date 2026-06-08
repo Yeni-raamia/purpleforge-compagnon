@@ -19,3 +19,12 @@ data/*
 # Fichiers système
 .DS_Store
 Thumbs.db
+
+# Documents internes (dossier projet Word, non destiné au dépôt public)
+*.docx
+
+# Fichier de reset mot de passe (usage local uniquement)
+reset_password.py
+
+# Données de démo (contient des données fictives, pas dans le repo)
+seed_demo.py

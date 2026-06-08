@@ -1,120 +1,187 @@
+<div align="center">
+
+<img src="screenshots/banner.png" alt="PurpleForge Compagnon" width="100%"/>
+
 # PurpleForge Compagnon
 
-> Outil web open-source de **purple teaming** : prend en entrée les techniques ATT&CK
-> jouées par une red team, et produit des règles de détection Sigma, la liste des logs
-> nécessaires, et une carte de couverture collaborative.
+**Open-source purple teaming platform — MITRE ATT&CK coverage tracker**
 
-**Boucle de valeur :**
+Track adversary techniques, map detections, get Sigma rule suggestions, and measure your blue team coverage — all in one collaborative web app.
+
+[![Python](https://img.shields.io/badge/Python-3.12-3776ab?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![HTMX](https://img.shields.io/badge/HTMX-1.9-3d72d7)](https://htmx.org/)
+[![Tests](https://img.shields.io/badge/tests-64%20passed-4ade80)](tests/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+*Interface en français — French UI · English README*
+
+</div>
+
+---
+
+## What is PurpleForge?
+
+PurpleForge is a **lightweight web platform for purple team exercises**. It bridges the gap between red team TTP execution and blue team detection by:
+
+- Letting you **log every ATT&CK technique** played during an engagement
+- Tracking **detection status** per technique (`Not detected` / `To build` / `Detected`)
+- Automatically surfacing **Sigma detection rules** from SigmaHQ for each technique
+- Generating an **ATT&CK Navigator export** to visualize coverage
+- Producing **remediation boards** with ownership and deadlines
+- Giving a **global coverage dashboard** across all campaigns
+
+The value loop:
+
 ```
-TTP joué → Sigma suggéré → règle testée & déployée → couverture mise à jour
+TTP played  →  Sigma rule suggested  →  Rule deployed & tested  →  Coverage updated
 ```
 
 ---
 
-## Fonctionnalités
+## Screenshots
 
-| Écran | Ce que ça fait |
+| Campaigns — Tactical Ops Center | Campaign Detail |
 |---|---|
-| **Campagnes** | Créer une session de purple team, voir l'historique |
-| **Matrice ATT&CK** | Parcourir les 14 tactiques, ajouter les techniques jouées en un clic |
-| **Fiche technique** | Statut (non détecté / à construire / détecté), note blue team, règles Sigma automatiques |
-| **Couverture** | Barre de progression par statut, carte visuelle technique par technique |
-| **Export Navigator** | Fichier `.json` importable sur [ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/) |
+| ![Campaigns](screenshots/campaigns_list.png) | ![Detail](screenshots/campaign_detail.png) |
+
+| ATT&CK Matrix | Coverage View |
+|---|---|
+| ![Matrix](screenshots/matrix.png) | ![Coverage](screenshots/coverage.png) |
+
+| Remediation Board | Global Dashboard |
+|---|---|
+| ![Remediation](screenshots/remediation.png) | ![Dashboard](screenshots/dashboard.png) |
 
 ---
 
-## Installation locale (Windows / Mac / Linux)
+## Features
 
-### Prérequis
+### Campaign Management
+- Create, edit, and delete purple team campaigns
+- Tag campaigns (APT group, exercise type, date…)
+- 10+ pre-built **APT templates** (APT28, APT29, Lazarus, Sandworm, Cozy Bear, and more)
+- **Compare two campaigns** — delta of detection coverage
+- **Import / Export** campaigns as PurpleForge JSON
+- **PDF print view** per campaign
+
+### ATT&CK Technique Tracking
+- Browse the full **MITRE ATT&CK Enterprise matrix** (14 tactics, 200+ techniques)
+- Add techniques to a campaign with one click
+- Set detection status per technique:
+  - 🔴 `Non détectée` — technique executed, nothing caught
+  - 🟡 `À construire` — detection rule exists but not yet deployed
+  - 🟢 `Détectée` — rule deployed and validated
+- Add **blue team** and **red team notes** with Markdown support
+- Paginated technique view for large campaigns
+
+### Sigma Rule Suggestions
+- For each ATT&CK technique, PurpleForge surfaces **up to 8 matching Sigma rules** from [SigmaHQ](https://github.com/SigmaHQ/sigma)
+- Shows required log sources and full YAML content
+- One click to copy the rule to your SIEM
+
+### Coverage & Analytics
+- **Per-campaign coverage page**: stacked bar (detected / to-build / not detected) by tactic
+- **Global dashboard**: KPIs across all campaigns, overdue remediation alerts
+- **Synthesis view**: one-row-per-campaign comparison table
+- **Remediation board** (kanban-style): assign techniques to team members, set deadlines
+
+### Exports
+- 📊 **ATT&CK Navigator JSON** — drop into [attack-navigator](https://mitre-attack.github.io/attack-navigator/) for the heatmap view
+- 📄 **CSV export** of techniques and remediation tasks
+- 🖨️ **Print-friendly PDF** views
+
+---
+
+## Quick Start
+
+### Prerequisites
 
 - [Python 3.12+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/)
 
-### Étapes
+### Local (Windows / macOS / Linux)
 
 ```bash
-# 1. Cloner le dépôt
-git clone https://github.com/<votre-org>/purpleforge.git
-cd purpleforge
+# 1. Clone the repo
+git clone https://github.com/Yeni-raamia/purpleforge-compagnon.git
+cd purpleforge-compagnon
 
-# 2. Créer et activer l'environnement virtuel
+# 2. Create and activate the virtual environment
 python -m venv .venv
 
 # Windows PowerShell
 .\.venv\Scripts\Activate.ps1
-# Mac / Linux
-# source .venv/bin/activate
+# macOS / Linux
+source .venv/bin/activate
 
-# 3. Installer les dépendances
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Démarrer le serveur
-uvicorn app.main:app --reload
+# 4. Start the server
+uvicorn app.main:app --reload --port 8080
 ```
 
-Ouvrir **http://127.0.0.1:8000** dans le navigateur.
+Open **http://127.0.0.1:8080** in your browser.
 
-> **Premier démarrage :** l'appli télécharge automatiquement deux jeux de données :
-> - Données ATT&CK Enterprise (MITRE STIX, ~40 Mo) — environ 30–60 secondes
-> - Règles Sigma de SigmaHQ (~30 Mo, 2 900+ règles) — environ 30–60 secondes
+> **First launch:** The app automatically downloads two datasets on startup:
+> - MITRE ATT&CK STIX data (~40 MB) — takes 30–60 s
+> - SigmaHQ rule repository (~30 MB, 2 900+ rules) — takes 30–60 s
 >
-> Ces téléchargements n'ont lieu qu'**une seule fois** ; les données sont mises en cache
-> dans le dossier `data/`. Les démarrages suivants sont instantanés.
+> These downloads happen **only once**; data is cached in `data/`. Subsequent starts are instant.
 
----
-
-## Installation via Docker
-
-### Prérequis
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-
-### Démarrer en une commande
+### Docker (one command)
 
 ```bash
 docker compose up
 ```
 
-Ouvrir **http://localhost:8000**.
+Open **http://localhost:8080** — then `docker compose down` to stop.
 
-Pour arrêter :
-```bash
-docker compose down
-```
+> The SQLite database and cached data survive container restarts via Docker volumes.
 
-> La base de données (`purpleforge.db`) et les données ATT&CK/Sigma (`data/`) sont
-> stockées dans des volumes Docker et survivent aux redémarrages.
+### Default credentials
+
+| Field | Value |
+|---|---|
+| Username | `admin` |
+| Password | `admin` |
+
+> Change the password immediately in the admin panel after first login.
 
 ---
 
-## Utilisation rapide
+## Usage Guide
 
-### 1. Créer une campagne
+### 1 — Create a campaign
 
-Sur la page d'accueil → **Voir les campagnes** → remplir le formulaire « Nouvelle campagne ».
+**Campaigns** page → drawer panel on the right → fill in name, description, optional tags → **Créer**.
 
-### 2. Ajouter des techniques
+Or pick a template: **Modèles APT** → choose an APT group → the campaign is pre-loaded with the group's known techniques.
 
-Dans la campagne → **Ouvrir la matrice ATT&CK** → choisir une tactique → cliquer sur
-**+ Ajouter** pour chaque technique jouée lors de l'exercice.
+### 2 — Add techniques from the ATT&CK matrix
 
-### 3. Qualifier les détections
+Inside a campaign → **Ouvrir la matrice ATT&CK** → navigate by tactic → click **+ Ajouter** on each technique played during the exercise.
 
-Revenir sur la page de la campagne → chaque technique a :
-- Un **statut** : `Non détectée` / `À construire` / `Détectée`
-- Une **note blue team** (règle déployée, ticket SIEM, commentaire…)
-- Un bouton **Règles Sigma** : affiche jusqu'à 8 règles SigmaHQ correspondantes avec
-  les logs requis et le contenu YAML
+### 3 — Qualify detections
 
-### 4. Consulter la couverture
+On the campaign detail page, each technique has:
+- A **status selector** — update without page reload (HTMX)
+- A **red team note** field — what the attacker did, tools used
+- A **blue team note** field — detection rule reference, SIEM ticket, comments
+- A **Règles Sigma** button — surfaces matching detection rules from SigmaHQ
 
-**Voir la couverture** → barre empilée vert/orange/rouge + carte de toutes les techniques
-par tactique.
+### 4 — Track remediation
 
-### 5. Exporter vers ATT&CK Navigator
+**Remédiation** tab → assign a responsible person and a deadline per technique → board view shows progress by status.
 
-**⬇ Exporter Navigator** → fichier `.json` à glisser sur
-[attack-navigator](https://mitre-attack.github.io/attack-navigator/) pour une vue matricielle.
+Global `/remediation` board aggregates tasks across all campaigns.
+
+### 5 — Export
+
+- **Navigator JSON** → import into [ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/) for the colored matrix
+- **CSV** → open in Excel / spreadsheet for reporting
+- **Print** → browser `Ctrl+P` → clean print-optimized layout
 
 ---
 
@@ -123,69 +190,136 @@ par tactique.
 ```
 purpleforge/
 ├── app/
-│   ├── main.py                  # Point d'entrée FastAPI
-│   ├── database.py              # Moteur SQLite + session
+│   ├── main.py                  # FastAPI entry point — routes registration, middleware
+│   ├── database.py              # SQLite engine + idempotent migrations (ALTER TABLE)
+│   ├── dependencies.py          # Auth middleware (require_user)
 │   ├── models/
-│   │   ├── campaign.py          # Modèle Campaign
-│   │   └── technique.py         # Modèle TechniqueEntry (statut, note, tactic…)
+│   │   ├── user.py              # User model (auth)
+│   │   ├── campaign.py          # Campaign model
+│   │   └── technique.py         # TechniqueEntry (status, notes, remediation)
 │   ├── routes/
-│   │   ├── campaigns.py         # Routes /campaigns/*
-│   │   └── techniques.py        # Routes update statut + Sigma
+│   │   ├── auth.py              # Login / logout
+│   │   ├── campaigns.py         # CRUD campaigns + exports + per-campaign remediation
+│   │   ├── techniques.py        # Status updates, notes, Sigma lookup
+│   │   └── dashboard.py         # Global dashboard, remediation board, stats
 │   ├── services/
-│   │   ├── attack.py            # Téléchargement + parsing MITRE ATT&CK
-│   │   ├── sigma.py             # Téléchargement + indexation règles Sigma
-│   │   └── coverage.py          # Calcul des statistiques de couverture
-│   ├── templates/               # Gabarits Jinja2 (HTML)
-│   └── static/                  # style.css
-├── data/                        # Données ATT&CK + Sigma (gitignorées)
+│   │   ├── attack.py            # Download + parse MITRE ATT&CK STIX 2.1
+│   │   ├── sigma.py             # Download + index SigmaHQ rules
+│   │   ├── coverage.py          # Coverage statistics calculator
+│   │   ├── dashboard.py         # Dashboard KPI aggregator
+│   │   └── remediation_stats.py # Remediation analytics
+│   ├── data/
+│   │   └── apt_templates.py     # Pre-built APT campaign templates
+│   ├── templates/               # Jinja2 HTML templates
+│   │   ├── base.html            # Layout, nav, footer
+│   │   ├── dashboard.html
+│   │   ├── campaigns/
+│   │   │   ├── list.html        # Tactical Ops Center — campaign list
+│   │   │   ├── detail.html      # Campaign detail — technique cards
+│   │   │   ├── matrix.html      # ATT&CK matrix browser
+│   │   │   ├── coverage.html    # Coverage heatmap
+│   │   │   ├── compare.html     # Two-campaign delta view
+│   │   │   └── ...
+│   │   └── partials/
+│   │       └── technique_card.html  # HTMX-swappable technique card
+│   └── static/
+│       ├── style.css            # Single stylesheet (~7 700 lines, append-only)
+│       └── favicon.svg          # Mascot bird favicon
+├── data/                        # ATT&CK + Sigma cache (git-ignored)
 ├── tests/
-│   └── test_smoke.py
+│   ├── conftest.py              # In-memory SQLite fixtures + auth bypass
+│   ├── test_smoke.py            # 4 sanity checks
+│   └── test_routes.py           # 60 HTTP route tests (10 classes + E2E scenario)
 ├── Dockerfile
 ├── docker-compose.yml
-└── requirements.txt
+├── requirements.txt
+└── CONTRIBUTING.md
 ```
 
-### Stack technique
+### Tech stack
 
-| Couche | Technologie |
+| Layer | Technology |
 |---|---|
-| Framework web | [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/) |
-| Rendu HTML | [Jinja2](https://jinja.palletsprojects.com/) |
-| Interactivité front | [HTMX](https://htmx.org/) (pas de JS framework) |
-| Base de données | [SQLite](https://www.sqlite.org/) via [SQLModel](https://sqlmodel.tiangolo.com/) |
-| Données ATT&CK | [MITRE ATT&CK STIX 2.1](https://github.com/mitre-attack/attack-stix-data) |
-| Règles de détection | [SigmaHQ](https://github.com/SigmaHQ/sigma) |
+| Web framework | [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/) |
+| HTML templating | [Jinja2](https://jinja.palletsprojects.com/) |
+| Frontend interactivity | [HTMX 1.9](https://htmx.org/) — no JS framework |
+| Database | [SQLite](https://www.sqlite.org/) via [SQLModel](https://sqlmodel.tiangolo.com/) |
+| ATT&CK data | [MITRE ATT&CK STIX 2.1](https://github.com/mitre-attack/attack-stix-data) via `mitreattack-python` |
+| Detection rules | [SigmaHQ](https://github.com/SigmaHQ/sigma) (~2 900 community rules) |
+| Auth | Session cookie (`itsdangerous`) |
 
 ---
 
-## Données téléchargées automatiquement
+## Automated Data Downloads
 
-| Source | Taille | Fréquence |
+On first startup, PurpleForge downloads and caches two external datasets:
+
+| Source | Size | When |
 |---|---|---|
-| `attack-stix-data` (MITRE GitHub) | ~40 Mo | 1 fois, mis en cache dans `data/` |
-| `sigma` (SigmaHQ GitHub) | ~30 Mo | 1 fois, mis en cache dans `data/` |
+| MITRE ATT&CK STIX (`attack-stix-data`, GitHub) | ~40 MB | Once — cached in `data/` |
+| SigmaHQ rule repository (GitHub) | ~30 MB | Once — cached in `data/` |
 
-Pour forcer un re-téléchargement, supprimer les fichiers correspondants dans `data/`.
+To force a re-download: delete the corresponding files in `data/`. The `data/` folder is git-ignored to keep the repository lightweight.
 
 ---
 
 ## Tests
 
 ```bash
-pytest tests/ -v
+# Run all 64 tests
+python -m pytest tests/ -v
+
+# Quick smoke check only
+python -m pytest tests/test_smoke.py -v
 ```
 
-4 tests de fumée couvrent : démarrage de l'appli, route d'accueil, moteur de base de
-données, création des tables.
+**Test architecture:**
+- `conftest.py` — in-memory SQLite (`StaticPool`), fake admin user, HTMX test client
+- `test_smoke.py` — 4 sanity checks (server starts, tables exist, home route responds)
+- `test_routes.py` — 60 HTTP tests across 10 classes covering all routes + a full end-to-end scenario (campaign creation → technique add → status update → export)
+
+All tests run in < 1 second with zero network calls.
 
 ---
 
-## Contribution
+## Roadmap
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md).
+- [ ] **Wazuh integration** — live alert import mapped to ATT&CK techniques
+- [ ] **Real-time search** — filter techniques by ID / name / tactic
+- [ ] **Audit log** — full history of who changed what and when
+- [ ] **Column sorting** — sortable tables in dense view
+- [ ] **Time evolution graph** — detection coverage over time
+- [ ] **In-app ATT&CK heatmap** — colored matrix without Navigator
+- [ ] **Outbound webhooks** — Slack / Teams alerts on status change or overdue deadline
+- [ ] **CSV import** — complement to existing JSON import
+- [ ] **Multi-user** — campaign ownership and team collaboration
 
 ---
 
-## Licence
+## Contributing
 
-MIT — voir [LICENSE](LICENSE).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on issues, branches, and pull requests.
+
+---
+
+## About the Suite Compagnon
+
+PurpleForge is tool **#3** of the **Suite Outils Compagnon** — a family of open-source defensive CTI/OSINT tools built for SOC teams, sharing the same brand mascot (the little green bird 🐦) and design language:
+
+| # | Tool | Role |
+|---|---|---|
+| 1 | **winCheck-Compagnon** | Windows asset inventory — PowerShell + HTML report |
+| 2 | **Veille-Compagnon** | Data breach monitoring for .ga domains |
+| 3 | **PurpleForge Compagnon** | Purple teaming platform — this repo |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+  Made with ❤️ for SOC teams · <a href="https://github.com/Yeni-raamia">@Yeni-raamia</a>
+</div>
